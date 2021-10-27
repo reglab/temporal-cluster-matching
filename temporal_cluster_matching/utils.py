@@ -32,6 +32,17 @@ def get_all_geoms_from_file(fn):
             geoms.append(geom)
     return geoms
 
+def get_all_geoms_from_file1(fn, index_done):
+    geoms = []
+    with fiona.open(fn) as f:
+        for row in f:
+            geom = row['geometry']
+            index = row['properties']['county_index']
+            if int(index) not in index_done:
+                geoms.append((index, geom))
+    return geoms
+
+
 ## Methods for getting poultry barn geoms
 def get_poultry_barn_geoms(base_dir="./data/"):
     return get_all_geoms_from_file(os.path.join(base_dir, "Delmarva_PL_House_Final2_epsg26918.geojson"))
@@ -122,11 +133,11 @@ def get_transformed_centroid_from_geom(geom, src_crs='epsg:26918', dst_crs='epsg
     shape = shapely.geometry.shape(geom)
     x = shape.centroid.x
     y = shape.centroid.y
-    lat, lon = fiona.transform.transform(src_crs, dst_crs, xs=[x], ys=[y])
-    lat = lat[0]
-    lon = lon[0]
+    # lat, lon = fiona.transform.transform(src_crs, dst_crs, xs=[x], ys=[y])
+    # lat = lat[0]
+    # lon = lon[0]
 
-    return (lat, lon)
+    return (y, x)
 
 def reverse_polygon_coordinates(geom):
     new_coords = []
@@ -218,6 +229,7 @@ class NAIPTileIndex:
             print("No tile intersections")
             return None
         else:
+            print(intersected_files)
             return intersected_files
 
 

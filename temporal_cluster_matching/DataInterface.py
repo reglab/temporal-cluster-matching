@@ -17,9 +17,12 @@ import rasterio.warp
 
 import shapely
 import shapely.geometry
+from shapely.ops import transform
 
 from pystac_client import Client
 import planetary_computer as pc
+
+import pyproj
 
 from . import utils
 
@@ -48,6 +51,17 @@ def get_mask_and_bounding_geoms(geom, buffer):
     '''
     footprint_shape = shapely.geometry.shape(geom).buffer(0.0)
     bounding_shape = footprint_shape.envelope.buffer(buffer).envelope
+
+    # transform mask to 26917
+
+    src = pyproj.CRS('EPSG:4326')
+    dst = pyproj.CRS('EPSG:26917')
+
+    project = pyproj.Transformer.from_crs(src, dst, always_xy=True).transform
+
+    footprint_shape = transform(project, footprint_shape)
+    bounding_shape = transform(project, bounding_shape)
+
     mask_geom = shapely.geometry.mapping(bounding_shape - footprint_shape) # full bounding area - initial footprint
     bounding_geom = shapely.geometry.mapping(bounding_shape) # full bounding area
     return mask_geom, bounding_geom
@@ -197,21 +211,27 @@ class NAIPDataLoader(AbstractDataLoader):
 
         mask_geom, bounding_geom = get_mask_and_bounding_geoms(geom, buffer)
         fns = self._get_fns_from_geom(geom)
-
         years = []
         images = []
         masks = []
         for fn in fns:
 
             year = int(fn.split("/")[2])
-            years.append(year)
 
+            skip = False
             with rasterio.Env(**RASTERIO_BEST_PRACTICES):
                 with rasterio.open(utils.NAIP_BLOB_ROOT + fn) as f:
-                    mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False, all_touched=True)
-                    mask_image = np.rollaxis(mask_image, 0, 3)
+                    try:
+                        mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False, all_touched=True)
+                    except Exception as e:
+                        pass
 
-                    full_image, _ = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False, pad=False, all_touched=True)
+                    mask_image = np.rollaxis(mask_image, 0, 3)
+                    try:
+                        full_image, _ = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False, pad=False, all_touched=True)
+                    except Exception as e:
+                        pass
+
                     full_image = np.rollaxis(full_image, 0, 3)
 
                     mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)
@@ -219,6 +239,7 @@ class NAIPDataLoader(AbstractDataLoader):
 
             images.append(full_image)
             masks.append(mask)
+            years.append(year)
 
         return images, masks, years
 
@@ -286,7 +307,6 @@ class S2DataLoader(AbstractDataLoader):
         images = []
         masks = []
         for url in S2DataLoader.urls:
-
             with rasterio.Env(**RASTERIO_BEST_PRACTICES):
                 with rasterio.open(url) as f:
                     mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False, all_touched=True)
@@ -385,7 +405,6 @@ class PlanetaryComputerS2DataLoader(AbstractDataLoader):
 
             with rasterio.Env(**RASTERIO_BEST_PRACTICES):
                 with rasterio.open(signed_href) as f:
-
                     mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False, all_touched=True)
                     mask_image = np.rollaxis(mask_image, 0, 3)
 
