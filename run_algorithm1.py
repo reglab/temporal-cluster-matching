@@ -80,18 +80,11 @@ def main():
             print("%d/%d\t%0.2f seconds" % (count, len(geoms), time.time() - tic))
             tic = time.time()
 
-        data_images, masks, years = dataloader.get_data_stack_from_geom(i[1], buffer=args.buffer)
-
-        for image, mask, year in zip(data_images, masks, years):
-            h, w, c = image.shape
-            print("Year: {}".format(year))
-            print("Width: mask {}   image {}".format(mask.shape[0], w))
-            print("Height: mask {}   image {}".format(mask.shape[1], h))
-        print("\n")
+        data_images, masks, years = dataloader.get_data_stack_from_geom(i[0], i[1], buffer=args.buffer)
 
 
         if args.algorithm == "kl":
-            divergence_values = algorithms.calculate_change_values(data_images, masks, n_clusters=args.num_clusters)
+            divergence_values = algorithms.calculate_change_values(i[0], years, data_images, masks, n_clusters=args.num_clusters)
         elif args.algorithm == "color":
             divergence_values = algorithms.calculate_change_values_with_color(data_images, masks)
 

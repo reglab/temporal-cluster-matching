@@ -207,7 +207,7 @@ class NAIPDataLoader(AbstractDataLoader):
 
         return images, years
 
-    def get_data_stack_from_geom(self, geom, buffer):
+    def get_data_stack_from_geom(self, index, geom, buffer):
 
         mask_geom, bounding_geom = get_mask_and_bounding_geoms(geom, buffer)
         fns = self._get_fns_from_geom(geom)
@@ -224,12 +224,16 @@ class NAIPDataLoader(AbstractDataLoader):
                     try:
                         mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False, all_touched=True)
                     except Exception as e:
+                        print(index)
+                        print("Mask image not executed, skipping")
                         pass
 
                     mask_image = np.rollaxis(mask_image, 0, 3)
                     try:
                         full_image, _ = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False, pad=False, all_touched=True)
                     except Exception as e:
+                        print(index)
+                        print("full image not executed, skipping")
                         pass
 
                     full_image = np.rollaxis(full_image, 0, 3)

@@ -11,7 +11,7 @@ from sklearn.preprocessing import StandardScaler
 from skimage.feature import local_binary_pattern
 from skimage.color import rgb2gray
 
-def calculate_change_values(images, masks, n_clusters, num_samples_for_kmeans=10000, use_minibatch=False):
+def calculate_change_values(index, years, images, masks, n_clusters, num_samples_for_kmeans=10000, use_minibatch=False):
     '''
     Args:
         imagery: A list of `numpy.ndarray` of shape (height, width, n_channels). This imagery should cover an area that is larger than the parcel of interest by some fixed distance (i.e. a buffer value).
@@ -24,8 +24,15 @@ def calculate_change_values(images, masks, n_clusters, num_samples_for_kmeans=10
         divergences: A list of KL-divergence values
     '''
     divergences = []
-    for image, mask in zip(images, masks):
+    for image, mask, year in zip(images, masks, years):
         h,w,c = image.shape
+        if mask.shape[0] != h or mask.shape[1] != w:
+            print(index)
+            for i, m, y in zip(images, masks, years):
+                h1, w1, c1 = i.shape
+                print("Year: {}".format(y))
+                print("Width: image {} mask {}".format(w1, m.shape[1]))
+                print("Width: image {} mask {}".format(h1, m.shape[0]))
         assert mask.shape[0] == h and mask.shape[1] == w
 
         mask = mask.astype(bool)
