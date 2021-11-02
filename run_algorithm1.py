@@ -82,6 +82,14 @@ def main():
 
         data_images, masks, years = dataloader.get_data_stack_from_geom(i[1], buffer=args.buffer)
 
+        for image, mask, year in zip(data_images, masks, years):
+            h, w, c = image.shape
+            print("Year: {}".format(year))
+            print("Width: mask {}   image {}".format(mask.shape[0], w))
+            print("Height: mask {}   image {}".format(mask.shape[1], h))
+        print("\n")
+
+
         if args.algorithm == "kl":
             divergence_values = algorithms.calculate_change_values(data_images, masks, n_clusters=args.num_clusters)
         elif args.algorithm == "color":
