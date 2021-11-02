@@ -42,7 +42,7 @@ def driver(index, geom):
     elif args_global.algorithm == "color":
         divergence_values = algorithms.calculate_change_values_with_color(data_images, masks)
 
-    with open(output_fn, "a") as f:
+    with open(output_fn_global, "a") as f:
         f.write("%d," % (index))
         for year in years:
             f.write("%d," % (year))
@@ -51,12 +51,14 @@ def driver(index, geom):
             f.write("%0.4f," % (divergence))
         f.write("\n")
 
-def make_global(dataloader, args):
+def make_global(dataloader, args, output_fn):
     global dataloader_global
     global args_global
+    global output_fn_global
 
     dataloader_global = dataloader
     args_global = args
+    output_fn_global = output_fn
 
 def main():
     start_time = time.time()
@@ -83,13 +85,17 @@ def main():
     ##############################
     # Load geoms / create dataloader
     ##############################
-    geoms = utils.get_all_geoms_from_file1(os.path.join("./data/", args.dataset), index_done)
+    if not os.path.exists(os.path.join("../FL_splits/", args.dataset)):
+        print("Dataset doesn't exist. It's likely that there just aren't any structures in this county.")
+        return
+
+    geoms = utils.get_all_geoms_from_file1(os.path.join("../FL_splits/", args.dataset), index_done)
     dataloader = DataInterface.NAIPDataLoader()
     if args.buffer is not None and args.buffer > 1:
         print("WARNING: your buffer distance is probably set incorrectly, this should be in units of degrees (at equator, more/less)")
 
     nprocs = mp.cpu_count()
-    p = mp.Pool(processes=nprocs, initializer=make_global, initargs=(dataloader, args,))
+    p = mp.Pool(processes=nprocs, initializer=make_global, initargs=(dataloader, args, output_fn,))
     p.starmap(driver, geoms)
 
     ##############################

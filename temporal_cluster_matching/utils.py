@@ -37,7 +37,7 @@ def get_all_geoms_from_file1(fn, index_done):
     with fiona.open(fn) as f:
         for row in f:
             geom = row['geometry']
-            index = row['properties']['county_index']
+            index = row['properties']['index']
             if int(index) not in index_done:
                 geoms.append((index, geom))
     return geoms
@@ -210,7 +210,12 @@ class NAIPTileIndex:
         """
 
         point = shapely.geometry.Point(float(lon), float(lat))
-        intersected_indices = list(self.tile_rtree.intersection(point.bounds))
+        try:
+            intersected_indices = list(self.tile_rtree.intersection(point.bounds))
+        except Exception as e:
+            print(e)
+            print(point)
+            print(point.bounds)
 
         intersected_files = []
         tile_intersection = False
@@ -229,7 +234,7 @@ class NAIPTileIndex:
             print("No tile intersections")
             return None
         else:
-            print(intersected_files)
+            # print(intersected_files)
             return intersected_files
 
 

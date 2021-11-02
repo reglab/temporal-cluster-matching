@@ -36,6 +36,7 @@ args = parser.parse_args()
 
 def main():
     start_time = time.time()
+    print("Algorithm: {}, {}, {}".format(args.dataset, str(args.buffer), str(args.num_clusters)))
     print("Starting algorithm at %s" % (str(datetime.datetime.now())))
 
     ##############################
@@ -59,7 +60,12 @@ def main():
     ##############################
     # Load geoms / create dataloader
     ##############################
-    geoms = utils.get_all_geoms_from_file1(os.path.join("./data/", args.dataset), index_done)
+    if not os.path.exists(args.dataset):
+        print("Dataset doesn't exist. It's likely that there just aren't any structures in this county.")
+        return
+
+    # geoms = utils.get_all_geoms_from_file1(os.path.join("./data/", args.dataset), index_done)
+    geoms = utils.get_all_geoms_from_file1(args.dataset, index_done)
     dataloader = DataInterface.NAIPDataLoader()
     if args.buffer is not None and args.buffer > 1:
         print("WARNING: your buffer distance is probably set incorrectly, this should be in units of degrees (at equator, more/less)")
