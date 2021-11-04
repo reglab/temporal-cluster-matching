@@ -80,7 +80,7 @@ def main():
             print("%d/%d\t%0.2f seconds" % (count, len(geoms), time.time() - tic))
             tic = time.time()
 
-        data_images, masks, years = dataloader.get_data_stack_from_geom(i[0], i[1], buffer=args.buffer)
+        data_images, masks, years = dataloader.get_data_stack_from_geom(i[0], i[1], buffer=args.buffer, geom_crs="epsg:4326")
 
 
         if args.algorithm == "kl":

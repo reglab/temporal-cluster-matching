@@ -52,15 +52,14 @@ def get_mask_and_bounding_geoms(geom, buffer):
     footprint_shape = shapely.geometry.shape(geom).buffer(0.0)
     bounding_shape = footprint_shape.envelope.buffer(buffer).envelope
 
-    # transform mask to 26917
-
-    src = pyproj.CRS('EPSG:4326')
-    dst = pyproj.CRS('EPSG:26917')
-
-    project = pyproj.Transformer.from_crs(src, dst, always_xy=True).transform
-
-    footprint_shape = transform(project, footprint_shape)
-    bounding_shape = transform(project, bounding_shape)
+    # transform mask to 26917 to conform to NAIP in FL
+    # src = pyproj.CRS('EPSG:4326')
+    # dst = pyproj.CRS('EPSG:26917')
+    #
+    # project = pyproj.Transformer.from_crs(src, dst, always_xy=True).transform
+    #
+    # footprint_shape = transform(project, footprint_shape)
+    # bounding_shape = transform(project, bounding_shape)
 
     mask_geom = shapely.geometry.mapping(bounding_shape - footprint_shape) # full bounding area - initial footprint
     bounding_geom = shapely.geometry.mapping(bounding_shape) # full bounding area
@@ -135,9 +134,9 @@ class NAIPDataLoader(AbstractDataLoader):
     def __init__(self):
         self.index = utils.NAIPTileIndex()
 
-    def _get_fns_from_geom(self, geom):
+    def _get_fns_from_geom(self, geom, src_crs):
 
-        centroid = utils.get_transformed_centroid_from_geom(geom, src_crs='epsg:26918', dst_crs='epsg:4326')
+        centroid = utils.get_transformed_centroid_from_geom(geom, src_crs=src_crs, dst_crs='epsg:4326')
         fns = self.index.lookup_tile(*centroid)
         fns = sorted(fns)
 
@@ -175,10 +174,10 @@ class NAIPDataLoader(AbstractDataLoader):
             years.append(year)
         return years
 
-    def get_rgb_stack_from_geom(self, geom, buffer, show_outline=True):
+    def get_rgb_stack_from_geom(self, geom, buffer, show_outline=True, geom_crs="epsg:4326"):
 
         mask_geom, bounding_geom = get_mask_and_bounding_geoms(geom, buffer)
-        fns = self._get_fns_from_geom(geom)
+        fns = self._get_fns_from_geom(geom, geom_crs)
 
         years = []
         images = []
@@ -189,10 +188,21 @@ class NAIPDataLoader(AbstractDataLoader):
 
             with rasterio.Env(**RASTERIO_BEST_PRACTICES):
                 with rasterio.open(utils.NAIP_BLOB_ROOT + fn) as f:
-                    mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False, all_touched=True)
+                    dst_crs = f.crs.to_string()
+                    if geom_crs != dst_crs:
+                        mask_geom = fiona.transform.transform_geom(geom_crs, dst_crs, mask_geom)
+                        bounding_geom = fiona.transform.transform_geom(geom_crs, dst_crs, bounding_geom)
+
+                    try:
+                        mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False, all_touched=True)
+                    except Exception as e:
+                        continue
                     mask_image = np.rollaxis(mask_image, 0, 3)
 
-                    full_image, _ = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False, pad=False, all_touched=True)
+                    try:
+                        full_image, _ = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False, pad=False, all_touched=True)
+                    except Exception as e:
+                        continue
                     full_image = np.rollaxis(full_image, 0, 3)[:,:,:3]
 
                     mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.uint8)
@@ -207,10 +217,10 @@ class NAIPDataLoader(AbstractDataLoader):
 
         return images, years
 
-    def get_data_stack_from_geom(self, index, geom, buffer):
+    def get_data_stack_from_geom(self, index, geom, buffer, geom_crs="epsg:4326"):
 
         mask_geom, bounding_geom = get_mask_and_bounding_geoms(geom, buffer)
-        fns = self._get_fns_from_geom(geom)
+        fns = self._get_fns_from_geom(geom, geom_crs)
         years = []
         images = []
         masks = []
@@ -221,6 +231,10 @@ class NAIPDataLoader(AbstractDataLoader):
             skip = False
             with rasterio.Env(**RASTERIO_BEST_PRACTICES):
                 with rasterio.open(utils.NAIP_BLOB_ROOT + fn) as f:
+                    dst_crs = f.crs.to_string()
+                    if geom_crs != dst_crs:
+                        mask_geom = fiona.transform.transform_geom(geom_crs, dst_crs, mask_geom)
+                        bounding_geom = fiona.transform.transform_geom(geom_crs, dst_crs, bounding_geom)
                     try:
                         mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False, all_touched=True)
                     except Exception as e:
