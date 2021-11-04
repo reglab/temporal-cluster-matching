@@ -6,20 +6,20 @@
 #SBATCH --mail-user=nathanjo@law.stanford.edu
 #SBATCH --partition=owners
 #SBATCH --mem=4GB
-#SBATCH --time=6:00:00
-#SBATCH --array=0-2
+#SBATCH --time=3:00:00
+#SBATCH --array=0-1
 
 cd ../
 
-dataset_list="../all_buildings/data/input/compare_models/orlando.geojson ../all_buildings/data/input/compare_models/miami.geojson ../all_buildings/data/input/compare_models/miami.geojson
+dataset_list="../all_buildings/data/input/compare_models/miami.geojson ../all_buildings/data/input/compare_models/miami.geojson
 "
-cluster_list="32 16 32
+cluster_list="16 32
 "
-buffer_list="0.001 0.001 0.001
+buffer_list="0.001 0.001
 "
-output_dir_list="../all_buildings/data/output/compare_models/orlando_32_0.001/ ../all_buildings/data/output/compare_models/miami_16_0.001/ ../all_buildings/data/output/compare_models/miami_32_0.001/
+output_dir_list="../all_buildings/data/output/compare_models/miami_16_0.001/ ../all_buildings/data/output/compare_models/miami_32_0.001/
 "
-alg_list="kl kl kl
+alg_list="kl kl
 "
 dataset_list=($dataset_list)
 cluster_list=($cluster_list)
