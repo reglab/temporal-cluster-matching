@@ -137,6 +137,7 @@ class NAIPDataLoader(AbstractDataLoader):
     def _get_fns_from_geom(self, geom, src_crs):
 
         centroid = utils.get_transformed_centroid_from_geom(geom, src_crs=src_crs, dst_crs='epsg:4326')
+        print(centroid)
         fns = self.index.lookup_tile(*centroid)
         fns = sorted(fns)
 
