@@ -18,6 +18,7 @@ import rasterio.warp
 import shapely
 import shapely.geometry
 from shapely.ops import transform
+import fiona
 
 from pystac_client import Client
 import planetary_computer as pc
