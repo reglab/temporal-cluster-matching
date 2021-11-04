@@ -221,37 +221,21 @@ class NAIPDataLoader(AbstractDataLoader):
             skip = False
             with rasterio.Env(**RASTERIO_BEST_PRACTICES):
                 with rasterio.open(utils.NAIP_BLOB_ROOT + fn) as f:
-                    mask_image = None
-                    mask_attempts = 0
-                    while mask_image is None:
-                        try:
-                            mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False, all_touched=True)
-                        except Exception as e:
-                            print(index)
-                            mask_attempts += 1
-                            print("Mask attempt: {}".format(mask_attempts))
-                            print("Mask image not executed, skipping (year: {})".format(year))
-                            if mask_attempts <= 3:
-                                pass
-                            else:
-                                continue
+                    try:
+                        mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False, all_touched=True)
+                    except Exception as e:
+                        print(index)
+                        print("Mask image not executed, skipping (year: {})".format(year))
+                        continue
 
                     mask_image = np.rollaxis(mask_image, 0, 3)
 
-                    full_image = None
-                    full_attempts = 0
-                    while full_image is None:
-                        try:
-                            full_image, _ = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False, pad=False, all_touched=True)
-                        except Exception as e:
-                            print(index)
-                            full_attempts += 1
-                            print("full attempt: {}".format(mask_attempts))
-                            print("full image not executed, skipping (year: {})".format(year))
-                            if full_attempts <= 3:
-                                pass
-                            else:
-                                continue
+                    try:
+                        full_image, _ = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False, pad=False, all_touched=True)
+                    except Exception as e:
+                        print(index)
+                        print("full image not executed, skipping (year: {})".format(year))
+                        continue
 
                     full_image = np.rollaxis(full_image, 0, 3)
 
