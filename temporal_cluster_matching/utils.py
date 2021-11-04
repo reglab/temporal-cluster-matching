@@ -133,11 +133,11 @@ def get_transformed_centroid_from_geom(geom, src_crs='epsg:26918', dst_crs='epsg
     shape = shapely.geometry.shape(geom)
     x = shape.centroid.x
     y = shape.centroid.y
-    lat, lon = fiona.transform.transform(src_crs, dst_crs, xs=[x], ys=[y])
-    lat = lat[0]
-    lon = lon[0]
+    # lat, lon = fiona.transform.transform(src_crs, dst_crs, xs=[x], ys=[y])
+    # lat = lat[0]
+    # lon = lon[0]
 
-    return (lat, lon)
+    return (y, x)
 
 def reverse_polygon_coordinates(geom):
     new_coords = []
