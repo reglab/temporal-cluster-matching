@@ -18,7 +18,6 @@ import rasterio.warp
 import shapely
 import shapely.geometry
 from shapely.ops import transform
-import fiona
 
 from pystac_client import Client
 import planetary_computer as pc
@@ -54,13 +53,13 @@ def get_mask_and_bounding_geoms(geom, buffer):
     bounding_shape = footprint_shape.envelope.buffer(buffer).envelope
 
     # transform mask to 26917 to conform to NAIP in FL
-    # src = pyproj.CRS('EPSG:4326')
-    # dst = pyproj.CRS('EPSG:26917')
-    #
-    # project = pyproj.Transformer.from_crs(src, dst, always_xy=True).transform
-    #
-    # footprint_shape = transform(project, footprint_shape)
-    # bounding_shape = transform(project, bounding_shape)
+    src = pyproj.CRS('EPSG:4326')
+    dst = pyproj.CRS('EPSG:26917')
+
+    project = pyproj.Transformer.from_crs(src, dst, always_xy=True).transform
+
+    footprint_shape = transform(project, footprint_shape)
+    bounding_shape = transform(project, bounding_shape)
 
     mask_geom = shapely.geometry.mapping(bounding_shape - footprint_shape) # full bounding area - initial footprint
     bounding_geom = shapely.geometry.mapping(bounding_shape) # full bounding area
@@ -190,10 +189,10 @@ class NAIPDataLoader(AbstractDataLoader):
 
             with rasterio.Env(**RASTERIO_BEST_PRACTICES):
                 with rasterio.open(utils.NAIP_BLOB_ROOT + fn) as f:
-                    dst_crs = f.crs.to_string()
-                    if geom_crs != dst_crs:
-                        mask_geom = fiona.transform.transform_geom(geom_crs, dst_crs, mask_geom)
-                        bounding_geom = fiona.transform.transform_geom(geom_crs, dst_crs, bounding_geom)
+                    # dst_crs = f.crs.to_string()
+                    # if geom_crs != dst_crs:
+                    #     mask_geom = fiona.transform.transform_geom(geom_crs, dst_crs, mask_geom)
+                    #     bounding_geom = fiona.transform.transform_geom(geom_crs, dst_crs, bounding_geom)
 
                     try:
                         mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False, all_touched=True)
@@ -233,10 +232,10 @@ class NAIPDataLoader(AbstractDataLoader):
             skip = False
             with rasterio.Env(**RASTERIO_BEST_PRACTICES):
                 with rasterio.open(utils.NAIP_BLOB_ROOT + fn) as f:
-                    dst_crs = f.crs.to_string()
-                    if geom_crs != dst_crs:
-                        mask_geom = fiona.transform.transform_geom(geom_crs, dst_crs, mask_geom)
-                        bounding_geom = fiona.transform.transform_geom(geom_crs, dst_crs, bounding_geom)
+                    # dst_crs = f.crs.to_string()
+                    # if geom_crs != dst_crs:
+                    #     mask_geom = fiona.transform.transform_geom(geom_crs, dst_crs, mask_geom)
+                    #     bounding_geom = fiona.transform.transform_geom(geom_crs, dst_crs, bounding_geom)
                     try:
                         mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False, all_touched=True)
                     except Exception as e:
