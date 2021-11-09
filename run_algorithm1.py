@@ -24,7 +24,7 @@ parser.add_argument('--algorithm', default='kl',
 
 parser.add_argument('--num_clusters', type=int, required=False, help='Number of clusters to use in k-means step.')
 
-parser.add_argument('--parcel_type', required=True,
+parser.add_argument('--parcel_type', required=True, default='no_parcel'
                     choices = ('no_parcel', 'parcel', 'parcel_dedup'),
                     help='Specify if using parcel type, dedup, etc.',)
 
