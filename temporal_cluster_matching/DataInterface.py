@@ -264,6 +264,9 @@ class NAIPDataLoader(AbstractDataLoader):
                     mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)
                     mask[np.sum(mask_image==0, axis=2) == 4] = 1
 
+                    print("Height: image {} mask {} mask_image {}".format(full_image.shape[0], mask.shape[0], mask_image.shape[1]))
+                    print("Width: image {} mask {} mask_image {}".format(full_image.shape[1], mask.shape[1], mask_image.shape[1]))
+
             images.append(full_image)
             masks.append(mask)
             years.append(year)
