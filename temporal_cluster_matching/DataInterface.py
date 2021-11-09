@@ -36,7 +36,7 @@ RASTERIO_BEST_PRACTICES = dict(
     VSI_CURL_CACHE_SIZE='200000000'
 )
 
-def get_mask_and_bounding_geoms(geom, buffer):
+def get_mask_and_bounding_geoms(geom, parcel_geom, buffer):
     '''Returns the two polygons needed to crop imagery with given a query geometry and buffer amount.
     The Temporal Cluster Matching algorithm will cluster all pixels in a footprint + neighborhood, then form distribution of cluster indices from the pixels within a footprint and a distribution with the pixels in the neighborhood.
     To calculate this, we need to crop the imagery from the entire buffered extent and know which of those pixels fall within the footprint. The two polyongs we return here let us do that.
@@ -50,7 +50,10 @@ def get_mask_and_bounding_geoms(geom, buffer):
         bounding_geom: A polygon in GeoJSON format that is the extent of `geom` after being buffered by `buffer`.
     '''
     footprint_shape = shapely.geometry.shape(geom).buffer(0.0)
-    bounding_shape = footprint_shape.envelope.buffer(buffer).envelope
+    if parcel_geom is not None:
+        bounding_shape = parcel_geom # use the literal parcel
+    else:
+        bounding_shape = footprint_shape.envelope.buffer(buffer).envelope
 
     # transform mask to 26917 to conform to NAIP in FL
     src = pyproj.CRS('EPSG:4326')
@@ -177,7 +180,7 @@ class NAIPDataLoader(AbstractDataLoader):
 
     def get_rgb_stack_from_geom(self, geom, buffer, show_outline=True, geom_crs="epsg:4326"):
 
-        mask_geom, bounding_geom = get_mask_and_bounding_geoms(geom, buffer)
+        mask_geom, bounding_geom = get_mask_and_bounding_geoms(geom, None, buffer)
         fns = self._get_fns_from_geom(geom, geom_crs)
 
         years = []
@@ -218,9 +221,13 @@ class NAIPDataLoader(AbstractDataLoader):
 
         return images, years
 
-    def get_data_stack_from_geom(self, index, geom, buffer, geom_crs="epsg:4326"):
-
-        mask_geom, bounding_geom = get_mask_and_bounding_geoms(geom, buffer)
+    def get_data_stack_from_geom(self, i, parcel, buffer, geom_crs="epsg:4326"):
+        geom = i[1]
+        index = i[0]
+        if parcel:
+            mask_geom, bounding_geom = get_mask_and_bounding_geoms(geom, i[2], buffer)
+        else:
+            mask_geom, bounding_geom = get_mask_and_bounding_geoms(geom, None, buffer)
         fns = self._get_fns_from_geom(geom, geom_crs)
         years = []
         images = []

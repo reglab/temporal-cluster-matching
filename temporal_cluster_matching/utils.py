@@ -42,6 +42,19 @@ def get_all_geoms_from_file1(fn, index_done):
                 geoms.append((index, geom))
     return geoms
 
+def get_all_geoms_from_file_parcel(fn, index_done):
+    geoms = []
+    with fiona.open(fn) as f:
+        for row in f:
+            geom = row['geometry']
+            index = row['properties']['index']
+            if row['properties']['savedgeom'] != 'None':
+                parcel_geom = shapely.wkt.loads(row['properties']['savedgeom'])
+            else:
+                parcel_geom = None
+            if int(index) not in index_done:
+                geoms.append((index, geom, parcel_geom))
+    return geoms
 
 ## Methods for getting poultry barn geoms
 def get_poultry_barn_geoms(base_dir="./data/"):

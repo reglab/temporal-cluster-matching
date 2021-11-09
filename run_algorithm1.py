@@ -24,6 +24,10 @@ parser.add_argument('--algorithm', default='kl',
 
 parser.add_argument('--num_clusters', type=int, required=False, help='Number of clusters to use in k-means step.')
 
+parser.add_argument('--parcel_type', required=True,
+                    choices = ('no_parcel', 'parcel', 'parcel_dedup'),
+                    help='Specify if using parcel type, dedup, etc.',)
+
 group = parser.add_mutually_exclusive_group(required=True)
 group.add_argument('--buffer', type=float, help='Amount to buffer for defining a neighborhood. Note: this will be in terms of units of the dataset.')
 
@@ -65,7 +69,11 @@ def main():
         return
 
     # geoms = utils.get_all_geoms_from_file1(os.path.join("./data/", args.dataset), index_done)
-    geoms = utils.get_all_geoms_from_file1(args.dataset, index_done)
+    if args.parcel_type == 'no_parcel':
+        geoms = utils.get_all_geoms_from_file1(args.dataset, index_done)
+    elif args.parcel_type == 'parcel':
+        geoms = utils.get_all_geoms_from_file_parcel(args.dataset, index_done)
+
     dataloader = DataInterface.NAIPDataLoader()
     if args.buffer is not None and args.buffer > 1:
         print("WARNING: your buffer distance is probably set incorrectly, this should be in units of degrees (at equator, more/less)")
@@ -80,8 +88,11 @@ def main():
             print("%d/%d\t%0.2f seconds" % (count, len(geoms), time.time() - tic))
             tic = time.time()
 
-        data_images, masks, years = dataloader.get_data_stack_from_geom(i[0], i[1], buffer=args.buffer, geom_crs="epsg:4326")
-
+        if args.parcel_type == 'no_parcel':
+            data_images, masks, years = dataloader.get_data_stack_from_geom(i, parcel=False, buffer=args.buffer, geom_crs="epsg:4326")
+        elif args.parcel_type == 'parcel':
+            data_images, masks, years = dataloader.get_data_stack_from_geom(i, parcel=True, buffer=args.buffer,
+                                                                            geom_crs="epsg:4326")
 
         if args.algorithm == "kl":
             divergence_values = algorithms.calculate_change_values(i[0], years, data_images, masks, n_clusters=args.num_clusters)
