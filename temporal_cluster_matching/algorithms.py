@@ -27,12 +27,12 @@ def calculate_change_values(index, years, images, masks, n_clusters, num_samples
     for image, mask, year in zip(images, masks, years):
         if mask.shape[0] > image.shape[0]:
             mask = mask[:image.shape[0], :]
-        else:
+        elif mask.shape[0] < image.shape[0]:
             image = image[:mask.shape[0], :, :]
 
         if mask.shape[1] > image.shape[1]:
             mask = mask[:, :image.shape[1]]
-        else:
+        elif mask.shape[1] < image.shape[1]:
             image = image[:, :mask.shape[1], :]
 
         h, w, c = image.shape
