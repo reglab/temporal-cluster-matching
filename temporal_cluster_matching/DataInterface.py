@@ -53,7 +53,6 @@ def get_mask_and_bounding_geoms(geom, parcel_geom, buffer):
     if parcel_geom is not None:
         bounding_shape = parcel_geom # use the literal parcel
     else:
-        print("Index {} has no associated parcel--using buffer".format(index))
         bounding_shape = footprint_shape.envelope.buffer(buffer).envelope
 
     # transform mask to 26917 to conform to NAIP in FL
