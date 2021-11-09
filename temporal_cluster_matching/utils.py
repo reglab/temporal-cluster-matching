@@ -15,6 +15,7 @@ import rtree
 import fiona
 import fiona.transform
 import shapely
+from shapely import wkt
 import shapely.geometry
 
 from sklearn.metrics import accuracy_score, mean_absolute_error
@@ -49,7 +50,7 @@ def get_all_geoms_from_file_parcel(fn, index_done):
             geom = row['geometry']
             index = row['properties']['index']
             if row['properties']['savedgeom'] != 'None':
-                parcel_geom = shapely.wkt.loads(row['properties']['savedgeom'])
+                parcel_geom = wkt.loads(row['properties']['savedgeom'])
             else:
                 parcel_geom = None
             if int(index) not in index_done:
