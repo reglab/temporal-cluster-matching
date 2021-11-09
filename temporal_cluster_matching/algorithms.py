@@ -26,6 +26,10 @@ def calculate_change_values(index, years, images, masks, n_clusters, num_samples
     divergences = []
     for image, mask, year in zip(images, masks, years):
         h,w,c = image.shape
+        print(type(image))
+        print(image)
+        print(type(mask))
+        print(mask)
         if mask.shape[0] != h or mask.shape[1] != w:
             print(index)
             for i, m, y in zip(images, masks, years):
