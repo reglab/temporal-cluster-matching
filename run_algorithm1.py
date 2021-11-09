@@ -100,7 +100,7 @@ def main():
             divergence_values = algorithms.calculate_change_values_with_color(data_images, masks)
 
         with open(output_fn, "a") as f:
-            f.write("%d," % (i[0]))
+            f.write("%d," % (int(i[0])))
             for year in years:
                 f.write("%d," % (year))
             f.write("|,")
