@@ -57,6 +57,20 @@ def get_all_geoms_from_file_parcel(fn, index_done):
                 geoms.append((index, geom, parcel_geom))
     return geoms
 
+def get_all_geoms_from_file_parcel_dedup(fn, index_done):
+    geoms = []
+    with fiona.open(fn) as f:
+        for row in f:
+            geom = row['geometry']
+            index = row['properties']['index']
+            if row['properties']['savedgeom'] != 'None':
+                parcel_geom = wkt.loads(row['properties']['savedgeom'])
+            else:
+                parcel_geom = None
+            if index not in index_done:
+                geoms.append((index, geom, parcel_geom))
+    return geoms
+
 ## Methods for getting poultry barn geoms
 def get_poultry_barn_geoms(base_dir="./data/"):
     return get_all_geoms_from_file(os.path.join(base_dir, "Delmarva_PL_House_Final2_epsg26918.geojson"))

@@ -51,8 +51,12 @@ def main():
         # see if csv exists within directory
         if os.path.exists(os.path.join(args.output_dir, "results.csv")):
             results = pd.read_csv(os.path.join(args.output_dir, "results.csv"))
-            index_done = results.iloc[:, 0].tolist()
-            index_done = [int(i) for i in index_done]
+            if args.parcel_type == 'parcel_dedup':
+                index_done = results.iloc[:, 0].tolist()
+                index_done = [i for i in index_done]
+            else:
+                index_done = results.iloc[:, 0].tolist()
+                index_done = [int(i) for i in index_done]
     else:
         os.makedirs(args.output_dir, exist_ok=False)
 
@@ -73,6 +77,8 @@ def main():
         geoms = utils.get_all_geoms_from_file1(args.dataset, index_done)
     elif args.parcel_type == 'parcel':
         geoms = utils.get_all_geoms_from_file_parcel(args.dataset, index_done)
+    else:
+        geoms = utils.get_all_geoms_from_file_parcel_dedup(args.dataset, index_done)
 
     dataloader = DataInterface.NAIPDataLoader()
     if args.buffer is not None and args.buffer > 1:
@@ -90,7 +96,7 @@ def main():
 
         if args.parcel_type == 'no_parcel':
             data_images, masks, years = dataloader.get_data_stack_from_geom(i, parcel=False, buffer=args.buffer, geom_crs="epsg:4326")
-        elif args.parcel_type == 'parcel':
+        else:
             data_images, masks, years = dataloader.get_data_stack_from_geom(i, parcel=True, buffer=args.buffer,
                                                                             geom_crs="epsg:4326")
 
