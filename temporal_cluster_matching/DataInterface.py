@@ -238,6 +238,7 @@ class NAIPDataLoader(AbstractDataLoader):
             skip = False
             with rasterio.Env(**RASTERIO_BEST_PRACTICES):
                 with rasterio.open(utils.NAIP_BLOB_ROOT + fn) as f:
+                    print(f.crs)
                     # dst_crs = f.crs.to_string()
                     # if geom_crs != dst_crs:
                     #     mask_geom = fiona.transform.transform_geom(geom_crs, dst_crs, mask_geom)
