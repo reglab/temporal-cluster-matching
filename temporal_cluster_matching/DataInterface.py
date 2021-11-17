@@ -277,7 +277,8 @@ class NAIPDataLoader(AbstractDataLoader):
 
         fns = []  # this should be a list of just one--do this because we have a continue in the exception
         for fn in tif_bounds:
-            if shapely.geometry.box(tif_bounds[fn]).contains(geom.centroid):
+            bounds = tif_bounds[fn]
+            if shapely.geometry.box(bounds[0], bounds[1], bounds[2], bounds[3]).contains(geom.centroid):
                 fns.append(fn)
                 break
 
