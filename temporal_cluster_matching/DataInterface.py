@@ -6,6 +6,7 @@ import abc
 from functools import lru_cache
 
 import numpy as np
+import pickle
 
 from skimage.segmentation import mark_boundaries
 
@@ -267,6 +268,50 @@ class NAIPDataLoader(AbstractDataLoader):
             images.append(full_image)
             masks.append(mask)
             years.append(year)
+
+        ## CODE TO ADD 2020 NAIP imagery for Berkeley
+        # Open pickle file to see which file to open
+        path_to_fn = '/oak/stanford/groups/deho/building_compliance/berkeley_naip_2020/'
+        with open(path_to_fn + 'bounds.p', 'rb') as handle:
+            tif_bounds = pickle.load(handle)
+
+        fns = []  # this should be a list of just one--do this because we have a continue in the exception
+        for fn in tif_bounds:
+            if shapely.geometry.box(tif_bounds[fn]).contains(geom.centroid):
+                fns.append(fn)
+                break
+
+        for fn in fns:
+            year = 2020
+            with rasterio.Env(**RASTERIO_BEST_PRACTICES):
+                with rasterio.open(path_to_fn + fn) as f:
+                    try:
+                        mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False,
+                                                           all_touched=True)
+                    except Exception as e:
+                        print(index)
+                        print("Mask image not executed, skipping (year: {})".format(year))
+                        continue
+    
+                    mask_image = np.rollaxis(mask_image, 0, 3)
+    
+                    try:
+                        full_image, _ = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False, pad=False,
+                                                           all_touched=True)
+                    except Exception as e:
+                        print(index)
+                        print("full image not executed, skipping (year: {})".format(year))
+                        continue
+    
+                    full_image = np.rollaxis(full_image, 0, 3)
+    
+                    mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)
+                    mask[np.sum(mask_image == 0, axis=2) == 4] = 1
+            
+            images.append(full_image)
+            masks.append(mask)
+            years.append(year)
+
 
         return images, masks, years
 
