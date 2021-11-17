@@ -57,7 +57,8 @@ def get_mask_and_bounding_geoms(geom, parcel_geom, buffer):
 
     # transform mask to 26917 to conform to NAIP in FL
     src = pyproj.CRS('EPSG:4326')
-    dst = pyproj.CRS('EPSG:26917')
+    # california is 26910
+    dst = pyproj.CRS('EPSG:26910')
 
     project = pyproj.Transformer.from_crs(src, dst, always_xy=True).transform
 
@@ -238,7 +239,6 @@ class NAIPDataLoader(AbstractDataLoader):
             skip = False
             with rasterio.Env(**RASTERIO_BEST_PRACTICES):
                 with rasterio.open(utils.NAIP_BLOB_ROOT + fn) as f:
-                    print(f.crs)
                     # dst_crs = f.crs.to_string()
                     # if geom_crs != dst_crs:
                     #     mask_geom = fiona.transform.transform_geom(geom_crs, dst_crs, mask_geom)
