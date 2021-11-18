@@ -272,8 +272,7 @@ class NAIPDataLoader(AbstractDataLoader):
 
                     # amending original metadata
                     print(full_image.shape)
-                    out_meta.update({'nodata': -99,
-                                     'height': full_image.shape[0],
+                    out_meta.update({'height': full_image.shape[0],
                                      'width': full_image.shape[1],
                                      'transform': full_transform})
 
