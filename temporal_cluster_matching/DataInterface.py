@@ -256,7 +256,7 @@ class NAIPDataLoader(AbstractDataLoader):
                     mask_image = np.rollaxis(mask_image, 0, 3)
 
                     try:
-                        full_image, _ = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False, pad=False, all_touched=True)
+                        full_image, full_transform = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False, pad=False, all_touched=True)
                     except Exception as e:
                         print(index)
                         print("full image not executed, skipping (year: {})".format(year))
