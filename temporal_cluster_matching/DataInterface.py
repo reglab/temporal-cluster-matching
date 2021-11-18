@@ -256,7 +256,7 @@ class NAIPDataLoader(AbstractDataLoader):
                     mask_image = np.rollaxis(mask_image, 0, 3)
 
                     try:
-                        full_image, full_transform = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False, pad=False, all_touched=True)
+                        full_image, _ = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False, pad=False, all_touched=True)
                     except Exception as e:
                         print(index)
                         print("full image not executed, skipping (year: {})".format(year))
@@ -297,7 +297,7 @@ class NAIPDataLoader(AbstractDataLoader):
                     mask_image = np.rollaxis(mask_image, 0, 3)
     
                     try:
-                        full_image, _ = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False, pad=False,
+                        full_image, full_transform = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False, pad=False,
                                                            all_touched=True)
                     except Exception as e:
                         print(index)
@@ -324,7 +324,7 @@ class NAIPDataLoader(AbstractDataLoader):
                     with rasterio.open(
                             '/oak/stanford/groups/deho/building_compliance/berkeley_naip_snippets/{}.tif'.format(index),
                             'w', **out_meta) as dst:
-                        dst.write(out_mask, 1)
+                        dst.write(full_image_mask, 1)
     
                     mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)
                     mask[np.sum(mask_image == 0, axis=2) == 4] = 1
