@@ -280,7 +280,6 @@ class NAIPDataLoader(AbstractDataLoader):
             bounds = tif_bounds[fn]
             if shapely.geometry.box(bounds[0], bounds[1], bounds[2], bounds[3]).contains(shapely.geometry.shape(geom).centroid):
                 fns.append(fn)
-                break
 
         for fn in fns:
             year = 2020
@@ -312,6 +311,7 @@ class NAIPDataLoader(AbstractDataLoader):
             images.append(full_image)
             masks.append(mask)
             years.append(year)
+            break
 
 
         return images, masks, years
