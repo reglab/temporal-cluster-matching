@@ -227,6 +227,7 @@ class NAIPDataLoader(AbstractDataLoader):
     def get_data_stack_from_geom(self, i, parcel, buffer, geom_crs="epsg:4326"):
         geom = i[1]
         index = i[0]
+        print(geom)
         if parcel:
             mask_geom, bounding_geom = get_mask_and_bounding_geoms(geom, i[2], buffer)
         else:
