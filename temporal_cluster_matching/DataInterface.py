@@ -308,7 +308,6 @@ class NAIPDataLoader(AbstractDataLoader):
                     full_image = np.rollaxis(full_image, 0, 3)
 
                     print(bounding_geom)
-                    full_image = np.rollaxis(full_image, 0, 3)
                     print(full_image.shape)
 
                     # testing out if i can output the image
@@ -324,7 +323,7 @@ class NAIPDataLoader(AbstractDataLoader):
 
                     with rasterio.open(
                             '/oak/stanford/groups/deho/building_compliance/berkeley_naip_snippets/{}.tif'.format(index),
-                            'w', **out_meta) as dst:
+                            'w', driver='GTiff', **out_meta) as dst:
                         dst.write(full_image_mask, 1)
     
                     mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)
