@@ -205,10 +205,12 @@ class NAIPDataLoader(AbstractDataLoader):
                     mask_image = np.rollaxis(mask_image, 0, 3)
 
                     try:
-                        full_image, _ = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False, pad=False, all_touched=True)
+                        full_image, full_transform = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False, pad=False, all_touched=True)
                     except Exception as e:
                         continue
+
                     full_image = np.rollaxis(full_image, 0, 3)[:,:,:3]
+
 
                     mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.uint8)
                     mask[np.sum(mask_image == 0, axis=2) != 4] = 1
@@ -261,6 +263,23 @@ class NAIPDataLoader(AbstractDataLoader):
                         continue
 
                     full_image = np.rollaxis(full_image, 0, 3)
+                    print(full_image.shape)
+
+                    # testing out if i can output the image
+                    full_image_mask = np.ma.masked_where(full_image < 0, full_image)
+                    # copying metadata from original raster
+                    out_meta = f.meta.copy()
+
+                    # amending original metadata
+                    print(full_image.shape)
+                    out_meta.update({'nodata': -99,
+                                     'height': full_image.shape[0],
+                                     'width': full_image.shape[1],
+                                     'transform': full_transform})
+
+                    with rasterio.open('/oak/stanford/groups/deho/building_compliance/berkeley_naip_snippets/{}.tif'.format(index),
+                                       'w', **out_meta) as dst:
+                        dst.write(out_mask, 1)
 
                     mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)
                     mask[np.sum(mask_image==0, axis=2) == 4] = 1
