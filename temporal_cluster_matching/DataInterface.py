@@ -230,8 +230,8 @@ class NAIPDataLoader(AbstractDataLoader):
                 17, 27, 31, 33, 35, 39, 41, 163, 164, 166]
 
         geom = i[1]
-        index = i[0]
-        print(geom)
+        index = int(i[0])
+
         if parcel:
             mask_geom, bounding_geom = get_mask_and_bounding_geoms(geom, i[2], buffer)
         else:
@@ -267,21 +267,22 @@ class NAIPDataLoader(AbstractDataLoader):
                         print("full image not executed, skipping (year: {})".format(year))
                         continue
 
-                    # testing out if i can output the image
-                    full_image_mask = np.ma.masked_where(full_image < 0, full_image)
-                    # copying metadata from original raster
-                    out_meta = f.meta.copy()
+                    if index in adus:
+                        # testing out if i can output the image
+                        full_image_mask = np.ma.masked_where(full_image < 0, full_image)
+                        # copying metadata from original raster
+                        out_meta = f.meta.copy()
 
-                    # amending original metadata
-                    out_meta.update({'height': full_image.shape[1],
-                                     'width': full_image.shape[2],
-                                     'transform': full_transform})
+                        # amending original metadata
+                        out_meta.update({'height': full_image.shape[1],
+                                         'width': full_image.shape[2],
+                                         'transform': full_transform})
 
-                    with rasterio.open(
-                            '/oak/stanford/groups/deho/building_compliance/berkeley_naip_snippets/{}_{}.tif'.format(
-                                index, year),
-                            'w', **out_meta) as dst:
-                        dst.write(full_image_mask)
+                        with rasterio.open(
+                                '/oak/stanford/groups/deho/building_compliance/berkeley_naip_snippets/{}_{}.tif'.format(
+                                    index, year),
+                                'w', **out_meta) as dst:
+                            dst.write(full_image_mask)
 
                     full_image = np.rollaxis(full_image, 0, 3)[:, :, :3]
 
@@ -326,21 +327,21 @@ class NAIPDataLoader(AbstractDataLoader):
                         print("full image not executed, skipping (year: {})".format(year))
                         continue
 
+                    if index in adus:
+                        # testing out if i can output the image
+                        full_image_mask = np.ma.masked_where(full_image < 0, full_image)
+                        # copying metadata from original raster
+                        out_meta = f.meta.copy()
 
-                    # testing out if i can output the image
-                    full_image_mask = np.ma.masked_where(full_image < 0, full_image)
-                    # copying metadata from original raster
-                    out_meta = f.meta.copy()
+                        # amending original metadata
+                        out_meta.update({'height': full_image.shape[1],
+                                         'width': full_image.shape[2],
+                                         'transform': full_transform})
 
-                    # amending original metadata
-                    out_meta.update({'height': full_image.shape[1],
-                                     'width': full_image.shape[2],
-                                     'transform': full_transform})
-
-                    with rasterio.open(
-                            '/oak/stanford/groups/deho/building_compliance/berkeley_naip_snippets/{}_{}.tif'.format(index, year),
-                            'w', **out_meta) as dst:
-                        dst.write(full_image_mask)
+                        with rasterio.open(
+                                '/oak/stanford/groups/deho/building_compliance/berkeley_naip_snippets/{}_{}.tif'.format(index, year),
+                                'w', **out_meta) as dst:
+                            dst.write(full_image_mask)
 
                     full_image = np.rollaxis(full_image, 0, 3)
                     mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)
