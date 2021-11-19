@@ -225,6 +225,10 @@ class NAIPDataLoader(AbstractDataLoader):
         return images, years
 
     def get_data_stack_from_geom(self, i, parcel, buffer, geom_crs="epsg:4326"):
+        adus = [52, 54, 55, 57, 60, 62, 67, 68, 70, 73, 74, 80, 83, 86, 96, 98, 100, 102, 105, 107, 109,
+                110, 113, 115, 116, 120, 122, 124, 126, 128, 131, 135, 137, 143, 150, 161, 0, 5, 13, 15,
+                17, 27, 31, 33, 35, 39, 41, 163, 164, 166]
+
         geom = i[1]
         index = i[0]
         print(geom)
@@ -257,12 +261,29 @@ class NAIPDataLoader(AbstractDataLoader):
                     mask_image = np.rollaxis(mask_image, 0, 3)
 
                     try:
-                        full_image, _ = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False, pad=False, all_touched=True)
+                        full_image, full_transform = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False, pad=False, all_touched=True)
                     except Exception as e:
                         print(index)
                         print("full image not executed, skipping (year: {})".format(year))
                         continue
 
+                    # testing out if i can output the image
+                    full_image_mask = np.ma.masked_where(full_image < 0, full_image)
+                    # copying metadata from original raster
+                    out_meta = f.meta.copy()
+
+                    # amending original metadata
+                    out_meta.update({'height': full_image.shape[1],
+                                     'width': full_image.shape[2],
+                                     'transform': full_transform})
+
+                    with rasterio.open(
+                            '/oak/stanford/groups/deho/building_compliance/berkeley_naip_snippets/{}_{}.tif'.format(
+                                index, year),
+                            'w', **out_meta) as dst:
+                        dst.write(full_image_mask)
+
+                    full_image = np.rollaxis(full_image, 0, 3)[:, :, :3]
 
                     mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)
                     mask[np.sum(mask_image==0, axis=2) == 4] = 1
@@ -306,7 +327,6 @@ class NAIPDataLoader(AbstractDataLoader):
                         continue
 
 
-
                     # testing out if i can output the image
                     full_image_mask = np.ma.masked_where(full_image < 0, full_image)
                     # copying metadata from original raster
@@ -314,11 +334,11 @@ class NAIPDataLoader(AbstractDataLoader):
 
                     # amending original metadata
                     out_meta.update({'height': full_image.shape[1],
-                                     'width': full_image.shape[1],
+                                     'width': full_image.shape[2],
                                      'transform': full_transform})
 
                     with rasterio.open(
-                            '/oak/stanford/groups/deho/building_compliance/berkeley_naip_snippets/{}.tif'.format(index),
+                            '/oak/stanford/groups/deho/building_compliance/berkeley_naip_snippets/{}_{}.tif'.format(index, year),
                             'w', **out_meta) as dst:
                         dst.write(full_image_mask)
 
