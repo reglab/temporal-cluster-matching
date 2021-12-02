@@ -57,6 +57,8 @@ def get_mask_and_bounding_geoms(geom, parcel_geom, buffer):
     else:
         bounding_shape = footprint_shape.envelope.buffer(buffer).envelope
 
+    superres_shape = footprint_shape.envelope.buffer(0.0003).envelope
+
     # transform mask to 26917 to conform to NAIP in FL
     src = pyproj.CRS('EPSG:4326')
     # california is 26910
@@ -66,10 +68,12 @@ def get_mask_and_bounding_geoms(geom, parcel_geom, buffer):
 
     footprint_shape = transform(project, footprint_shape)
     bounding_shape = transform(project, bounding_shape)
+    superres_shape = transform(project, superres_shape)
 
     mask_geom = shapely.geometry.mapping(bounding_shape - footprint_shape) # full bounding area - initial footprint
     bounding_geom = shapely.geometry.mapping(bounding_shape) # full bounding area
-    return mask_geom, bounding_geom
+    superres_geom = shapely.geometry.mapping(superres_shape)
+    return mask_geom, bounding_geom, superres_geom
 
 
 ################################################################
@@ -199,6 +203,8 @@ class NAIPDataLoader(AbstractDataLoader):
                     #     mask_geom = fiona.transform.transform_geom(geom_crs, dst_crs, mask_geom)
                     #     bounding_geom = fiona.transform.transform_geom(geom_crs, dst_crs, bounding_geom)
 
+
+
                     try:
                         mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False, all_touched=True)
                     except Exception as e:
@@ -248,10 +254,6 @@ class NAIPDataLoader(AbstractDataLoader):
             skip = False
             with rasterio.Env(**RASTERIO_BEST_PRACTICES):
                 with rasterio.open(utils.NAIP_BLOB_ROOT + fn) as f:
-                    # dst_crs = f.crs.to_string()
-                    # if geom_crs != dst_crs:
-                    #     mask_geom = fiona.transform.transform_geom(geom_crs, dst_crs, mask_geom)
-                    #     bounding_geom = fiona.transform.transform_geom(geom_crs, dst_crs, bounding_geom)
                     try:
                         mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False, all_touched=True)
                     except Exception as e:
@@ -286,9 +288,9 @@ class NAIPDataLoader(AbstractDataLoader):
                                     '/oak/stanford/groups/deho/building_compliance/berkeley_naip_snippets/{}_{}.tif'.format(
                                         index, year),
                                     'w', **out_meta) as dst:
-                                dst.write(full_image_mask[:, :, :3])
+                                dst.write(full_image_mask)
 
-                    full_image = np.rollaxis(full_image, 0, 3)[:, :, :3]
+                    full_image = np.rollaxis(full_image, 0, 3)
 
                     mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)
                     mask[np.sum(mask_image==0, axis=2) == 4] = 1
@@ -331,7 +333,7 @@ class NAIPDataLoader(AbstractDataLoader):
                         print("full image not executed, skipping (year: {})".format(year))
                         continue
 
-                    if buffer == 0.0003:
+                    if buffer == 0.0001:
                         if index in adus:
                             # testing out if i can output the image
                             full_image_mask = np.ma.masked_where(full_image < 0, full_image)
