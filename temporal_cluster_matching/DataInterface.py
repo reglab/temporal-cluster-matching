@@ -57,9 +57,7 @@ def get_mask_and_bounding_geoms(geom, parcel_geom, buffer):
     else:
         bounding_shape = footprint_shape.envelope.buffer(buffer).envelope
 
-    print(footprint_shape.envelope.buffer(0.0003).envelope)
     superres_shape = footprint_shape.envelope.buffer(0.0003).envelope
-    print(superres_shape)
 
     # transform mask to 26917 to conform to NAIP in FL
     src = pyproj.CRS('EPSG:4326')
