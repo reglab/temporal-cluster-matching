@@ -9,5 +9,5 @@
 
 cd ../
 
-singularity exec $GROUP_HOME/singularity/cafo_permit+tcm_10-21-21.sif python run_algorithm1.py --dataset "../all_buildings/data/input/berkeley/adu_footprints_manualadd_tcm.geojson" --num_clusters 32 --buffer 0.0001 --output_dir ../all_buildings/data/output/berkeley/buffer/ --algorithm kl --parcel_type no_parcel
+singularity exec $GROUP_HOME/singularity/cafo_permit+tcm_10-21-21.sif python run_algorithm1.py --dataset "../all_buildings/data/input/berkeley/adu_footprints_manualadd_tcm.geojson" --num_clusters 32 --buffer 0.0001 --output_dir ../all_buildings/data/output/berkeley/adu_32_0.0001_superres/ --algorithm kl --parcel_type no_parcel
 

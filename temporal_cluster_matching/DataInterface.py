@@ -240,9 +240,9 @@ class NAIPDataLoader(AbstractDataLoader):
         index = int(i[0])
 
         if parcel:
-            mask_geom, bounding_geom = get_mask_and_bounding_geoms(geom, i[2], buffer)
+            mask_geom, bounding_geom, superres_geom = get_mask_and_bounding_geoms(geom, i[2], buffer)
         else:
-            mask_geom, bounding_geom = get_mask_and_bounding_geoms(geom, None, buffer)
+            mask_geom, bounding_geom, superres_geom = get_mask_and_bounding_geoms(geom, None, buffer)
         fns = self._get_fns_from_geom(geom, geom_crs)
         years = []
         images = []
@@ -250,10 +250,50 @@ class NAIPDataLoader(AbstractDataLoader):
         for fn in fns:
 
             year = int(fn.split("/")[2])
+            superres_image_path = '/oak/stanford/groups/deho/building_compliance/berkeley_naip_superres/{}_{}.tif'.format(
+                index, year)
 
             skip = False
+            # subset naip tile with buffer==0.0003 and apply EDSR to superres
             with rasterio.Env(**RASTERIO_BEST_PRACTICES):
                 with rasterio.open(utils.NAIP_BLOB_ROOT + fn) as f:
+                    try:
+                        superres_image, superres_transform = rasterio.mask.mask(f, [superres_geom], crop=True,
+                                                                                invert=False, pad=False,
+                                                                                all_touched=True)
+                    except Exception as e:
+                        print(index)
+                        print("Superres image not masked, skipping (year: {})".format(year))
+                        continue
+
+                    pic = np.transpose(superres_image, (1, 2, 0))[:, :, :3]
+                    prediction = None
+                    with tf.compat.v1.Session() as persisted_sess:
+                        with tf.compat.v1.gfile.FastGFile(model_path, 'rb') as m:
+                            graph_def = tf.compat.v1.GraphDef()
+                            graph_def.ParseFromString(m.read())
+                            persisted_sess.graph.as_default()
+                            tf.import_graph_def(graph_def)
+
+                            output = persisted_sess.graph.get_tensor_by_name('import/NCHW_output:0')
+                            prediction = persisted_sess.run(output, {'import/IteratorGetNext:0': [pic]})
+                            prediction = prediction[0]
+
+                    if prediction is not None:
+                        out_profile = f.profile.copy()
+                        out_aff = rasterio.Affine(superres_transform[0] / 4, superres_transform[1],
+                                                  superres_transform[2],
+                                                  superres_transform[3], superres_transform[4] / 4,
+                                                  superres_transform[5])
+
+                        out_profile.update({'count': 3, 'height': prediction.shape[1], 'width': prediction.shape[2],
+                                            'transform': out_aff})
+
+                        with rasterio.open(superres_image_path, 'w', **out_profile) as dst:
+                            dst.write(prediction)  # the output of EDSR is (1, 3, ori_height*4, ori_weight*4)
+
+            with rasterio.Env(**RASTERIO_BEST_PRACTICES):
+                with rasterio.open(superres_image_path) as f:
                     try:
                         mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False, all_touched=True)
                     except Exception as e:
@@ -269,26 +309,6 @@ class NAIPDataLoader(AbstractDataLoader):
                         print(index)
                         print("full image not executed, skipping (year: {})".format(year))
                         continue
-                    if buffer == 0.0001:
-                        if index in adus:
-                            # testing out if i can output the image
-                            full_image_mask = np.ma.masked_where(full_image < 0, full_image)
-
-                            # given this mask, i will try to pass super resolution
-
-                            # copying metadata from original raster
-                            out_meta = f.meta.copy()
-                            print(f'height: {full_image.shape[1]}, width: {full_image.shape[2]}')
-                            # amending original metadata
-                            out_meta.update({'height': full_image.shape[1],
-                                             'width': full_image.shape[2],
-                                             'transform': full_transform})
-
-                            with rasterio.open(
-                                    '/oak/stanford/groups/deho/building_compliance/berkeley_naip_snippets/{}_{}.tif'.format(
-                                        index, year),
-                                    'w', **out_meta) as dst:
-                                dst.write(full_image_mask)
 
                     full_image = np.rollaxis(full_image, 0, 3)
 
@@ -313,8 +333,48 @@ class NAIPDataLoader(AbstractDataLoader):
 
         for fn in fns:
             year = 2020
+            superres_image_path = '/oak/stanford/groups/deho/building_compliance/berkeley_naip_superres/{}_{}.tif'.format(
+                index, year)
+
             with rasterio.Env(**RASTERIO_BEST_PRACTICES):
                 with rasterio.open(path_to_fn + fn) as f:
+                    try:
+                        superres_image, superres_transform = rasterio.mask.mask(f, [superres_geom], crop=True,
+                                                                                invert=False, pad=False,
+                                                                                all_touched=True)
+                    except Exception as e:
+                        print(index)
+                        print("Superres image not masked, skipping (year: {})".format(year))
+                        continue
+
+                    pic = np.transpose(superres_image, (1, 2, 0))[:, :, :3]
+                    prediction = None
+                    with tf.compat.v1.Session() as persisted_sess:
+                        with tf.compat.v1.gfile.FastGFile(model_path, 'rb') as m:
+                            graph_def = tf.compat.v1.GraphDef()
+                            graph_def.ParseFromString(m.read())
+                            persisted_sess.graph.as_default()
+                            tf.import_graph_def(graph_def)
+
+                            output = persisted_sess.graph.get_tensor_by_name('import/NCHW_output:0')
+                            prediction = persisted_sess.run(output, {'import/IteratorGetNext:0': [pic]})
+                            prediction = prediction[0]
+
+                    if prediction is not None:
+                        out_profile = f.profile.copy()
+                        out_aff = rasterio.Affine(superres_transform[0] / 4, superres_transform[1],
+                                                  superres_transform[2],
+                                                  superres_transform[3], superres_transform[4] / 4,
+                                                  superres_transform[5])
+
+                        out_profile.update({'count': 3, 'height': prediction.shape[1], 'width': prediction.shape[2],
+                                            'transform': out_aff})
+
+                        with rasterio.open(superres_image_path, 'w', **out_profile) as dst:
+                            dst.write(prediction)  # the output of EDSR is (1, 3, ori_height*4, ori_weight*4)
+
+            with rasterio.Env(**RASTERIO_BEST_PRACTICES):
+                with rasterio.open(superres_image_path) as f:
                     try:
                         mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False,
                                                            all_touched=True)
@@ -332,23 +392,6 @@ class NAIPDataLoader(AbstractDataLoader):
                         print(index)
                         print("full image not executed, skipping (year: {})".format(year))
                         continue
-
-                    if buffer == 0.0001:
-                        if index in adus:
-                            # testing out if i can output the image
-                            full_image_mask = np.ma.masked_where(full_image < 0, full_image)
-                            # copying metadata from original raster
-                            out_meta = f.meta.copy()
-
-                            # amending original metadata
-                            out_meta.update({'height': full_image.shape[1],
-                                             'width': full_image.shape[2],
-                                             'transform': full_transform})
-
-                            with rasterio.open(
-                                    '/oak/stanford/groups/deho/building_compliance/berkeley_naip_snippets/{}_{}.tif'.format(index, year),
-                                    'w', **out_meta) as dst:
-                                dst.write(full_image_mask)
 
                     full_image = np.rollaxis(full_image, 0, 3)
                     mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)

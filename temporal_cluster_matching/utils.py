@@ -225,8 +225,8 @@ class NAIPTileIndex:
         #     download_url(NAIPTileIndex.index_blob_root + file_path, base_path)
 
         self.base_path = base_path
-        self.tile_rtree = rtree.index.Index("tile_index")
-        self.tile_index = pickle.load(open("tiles.p", "rb"))
+        self.tile_rtree = rtree.index.Index("tiles/tile_index")
+        self.tile_index = pickle.load(open("tiles/tiles.p", "rb"))
 
 
     def lookup_tile(self, lat, lon):
