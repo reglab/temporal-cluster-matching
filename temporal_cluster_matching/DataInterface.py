@@ -239,6 +239,8 @@ class NAIPDataLoader(AbstractDataLoader):
         geom = i[1]
         index = int(i[0])
 
+        model_path = '../all_buildings/scripts/berkeley/checkpoints/EDSR_x4.pb'
+
         if parcel:
             mask_geom, bounding_geom, superres_geom = get_mask_and_bounding_geoms(geom, i[2], buffer)
         else:
