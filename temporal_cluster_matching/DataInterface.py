@@ -58,6 +58,7 @@ def get_mask_and_bounding_geoms(geom, parcel_geom, buffer):
         bounding_shape = footprint_shape.envelope.buffer(buffer).envelope
 
     superres_shape = footprint_shape.envelope.buffer(0.0003).envelope
+    print(superres_shape)
 
     # transform mask to 26917 to conform to NAIP in FL
     src = pyproj.CRS('EPSG:4326')
@@ -69,10 +70,12 @@ def get_mask_and_bounding_geoms(geom, parcel_geom, buffer):
     footprint_shape = transform(project, footprint_shape)
     bounding_shape = transform(project, bounding_shape)
     superres_shape = transform(project, superres_shape)
+    print(superres_shape)
 
     mask_geom = shapely.geometry.mapping(bounding_shape - footprint_shape) # full bounding area - initial footprint
     bounding_geom = shapely.geometry.mapping(bounding_shape) # full bounding area
     superres_geom = shapely.geometry.mapping(superres_shape)
+    print(superres_geom)
     return mask_geom, bounding_geom, superres_geom
 
 
