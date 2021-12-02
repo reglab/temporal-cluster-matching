@@ -240,6 +240,7 @@ class NAIPTileIndex:
         point = shapely.geometry.Point(float(lon), float(lat))
         try:
             intersected_indices = list(self.tile_rtree.intersection(point.bounds))
+            print(intersected_indices)
         except Exception as e:
             print(e)
             print(point)
