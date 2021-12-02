@@ -224,7 +224,6 @@ class NAIPTileIndex:
         # for file_path in NAIPTileIndex.index_fns:
         #     download_url(NAIPTileIndex.index_blob_root + file_path, base_path)
 
-        print(base_path)
         self.base_path = base_path
         self.tile_rtree = rtree.index.Index("tile_index")
         self.tile_index = pickle.load(open("tiles.p", "rb"))
@@ -241,7 +240,6 @@ class NAIPTileIndex:
         point = shapely.geometry.Point(float(lon), float(lat))
         try:
             intersected_indices = list(self.tile_rtree.intersection(point.bounds))
-            print(intersected_indices)
         except Exception as e:
             print(e)
             print(point)
