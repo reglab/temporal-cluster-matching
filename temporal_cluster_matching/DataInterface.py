@@ -22,6 +22,7 @@ from shapely.ops import transform
 
 from pystac_client import Client
 import planetary_computer as pc
+import tensorflow as tf
 
 import pyproj
 
@@ -266,13 +267,16 @@ class NAIPDataLoader(AbstractDataLoader):
                         print(index)
                         print("full image not executed, skipping (year: {})".format(year))
                         continue
-                    if buffer == 0.0003:
+                    if buffer == 0.0001:
                         if index in adus:
                             # testing out if i can output the image
                             full_image_mask = np.ma.masked_where(full_image < 0, full_image)
+
+                            # given this mask, i will try to pass super resolution
+
                             # copying metadata from original raster
                             out_meta = f.meta.copy()
-
+                            print(f'height: {full_image.shape[1]}, width: {full_image.shape[2]}')
                             # amending original metadata
                             out_meta.update({'height': full_image.shape[1],
                                              'width': full_image.shape[2],
@@ -282,7 +286,7 @@ class NAIPDataLoader(AbstractDataLoader):
                                     '/oak/stanford/groups/deho/building_compliance/berkeley_naip_snippets/{}_{}.tif'.format(
                                         index, year),
                                     'w', **out_meta) as dst:
-                                dst.write(full_image_mask)
+                                dst.write(full_image_mask[:, :, :3])
 
                     full_image = np.rollaxis(full_image, 0, 3)[:, :, :3]
 
