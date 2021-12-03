@@ -35,14 +35,11 @@ def get_all_geoms_from_file(fn):
 
 def get_all_geoms_from_file1(fn, index_done):
     geoms = []
-    adus = [52, 54, 55, 57, 60, 62, 67, 68, 70, 73, 74, 80, 83, 86, 96, 98, 100, 102, 105, 107, 109,
-                110, 113, 115, 116, 120, 122, 124, 126, 128, 131, 135, 137, 143, 150, 161, 0, 5, 13, 15,
-                17, 27, 31, 33, 35, 39, 41, 163, 164, 166]
     with fiona.open(fn) as f:
         for row in f:
             geom = row['geometry']
             index = row['properties']['index']
-            if int(index) not in index_done and int(index) in adus:
+            if int(index) not in index_done:
                 geoms.append((index, geom))
     return geoms
 
