@@ -72,6 +72,9 @@ def calculate_change_values(index, years, images, masks, n_clusters, num_samples
         # compute the frequency with which each cluster occurs in the parcel and outside of the parcel
         parcel_counts = np.bincount(parcel_labels.ravel(), minlength=n_clusters)
         neighborhood_counts = np.bincount(neighborhood_labels.ravel(), minlength=n_clusters)
+        with open('log.txt', 'a') as w:
+            w.write(f'height {h}, weight {w}, bands {c}\n')
+            w.write(f'parcel_labels.shape[0]: {parcel_labels.shape[0]}\n')
 
         if parcel_labels.shape[0] > 0:
             # normalize each vector of cluster index counts into discrete distributions
