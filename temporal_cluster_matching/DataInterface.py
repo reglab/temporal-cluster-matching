@@ -315,7 +315,7 @@ class NAIPDataLoader(AbstractDataLoader):
                     full_image = np.rollaxis(full_image, 0, 3)
 
                     mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)
-                    mask[np.sum(mask_image==0, axis=2) == 4] = 1
+                    mask[np.sum(mask_image==0, axis=2) == 3] = 1
 
             images.append(full_image)
             masks.append(mask)
@@ -397,7 +397,7 @@ class NAIPDataLoader(AbstractDataLoader):
 
                     full_image = np.rollaxis(full_image, 0, 3)
                     mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)
-                    mask[np.sum(mask_image == 0, axis=2) == 4] = 1
+                    mask[np.sum(mask_image == 0, axis=2) == 3] = 1
             
             images.append(full_image)
             masks.append(mask)
