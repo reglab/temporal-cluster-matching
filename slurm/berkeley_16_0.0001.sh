@@ -4,8 +4,8 @@
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=nathanjo@law.stanford.edu
 #SBATCH --partition=owners
-#SBATCH --time=1:00:00
-#SBATCH --mem=4GB 
+#SBATCH --time=2:00:00
+#SBATCH --mem=64GB 
 
 cd ../
 
