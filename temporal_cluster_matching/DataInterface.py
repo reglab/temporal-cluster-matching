@@ -61,8 +61,9 @@ def get_mask_and_bounding_geoms(geom, parcel_geom, buffer):
 
     # transform mask to 26917 to conform to NAIP in FL
     src = pyproj.CRS('EPSG:4326')
-    # california is 26910
-    dst = pyproj.CRS('EPSG:26910')
+    # berkeley is 26910
+    #los angeles in 26911
+    dst = pyproj.CRS('EPSG:26911')
 
     project = pyproj.Transformer.from_crs(src, dst, always_xy=True).transform
 
@@ -241,7 +242,6 @@ class NAIPDataLoader(AbstractDataLoader):
         else:
             mask_geom, bounding_geom, superres_geom = get_mask_and_bounding_geoms(geom, None, buffer)
         fns = self._get_fns_from_geom(geom, geom_crs)
-        print(mask_geom, bounding_geom)
         years = []
         images = []
         masks = []
@@ -250,7 +250,6 @@ class NAIPDataLoader(AbstractDataLoader):
             year = int(fn.split("/")[2])
             with rasterio.Env(**RASTERIO_BEST_PRACTICES):
                 with rasterio.open(utils.NAIP_BLOB_ROOT + fn) as f:
-                    print(f.meta)
                     try:
                         mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False,
                                                            all_touched=True)
