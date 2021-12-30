@@ -241,6 +241,7 @@ class NAIPDataLoader(AbstractDataLoader):
         else:
             mask_geom, bounding_geom, superres_geom = get_mask_and_bounding_geoms(geom, None, buffer)
         fns = self._get_fns_from_geom(geom, geom_crs)
+        print(mask_geom, bounding_geom)
         years = []
         images = []
         masks = []
@@ -249,6 +250,7 @@ class NAIPDataLoader(AbstractDataLoader):
             year = int(fn.split("/")[2])
             with rasterio.Env(**RASTERIO_BEST_PRACTICES):
                 with rasterio.open(utils.NAIP_BLOB_ROOT + fn) as f:
+                    print(f.meta)
                     try:
                         mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False,
                                                            all_touched=True)
