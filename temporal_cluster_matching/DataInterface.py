@@ -278,7 +278,7 @@ class NAIPDataLoader(AbstractDataLoader):
                                      'transform': full_transform})
 
                     with rasterio.open(
-                            '/oak/stanford/groups/deho/building_compliance/berkeley_naip_snippets/{}_{}.tif'.format(
+                            '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/2018_investigate/{}_{}.tif'.format(
                                 index, year),
                             'w', **out_meta) as dst:
                         dst.write(full_image_mask)
