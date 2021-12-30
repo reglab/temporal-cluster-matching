@@ -295,9 +295,6 @@ class NAIPDataLoader(AbstractDataLoader):
             years.append(year)
 
     def get_data_stack_from_geom_superres(self, i, parcel, buffer, geom_crs="epsg:4326"):
-        adus = [52, 54, 55, 57, 60, 62, 67, 68, 70, 73, 74, 80, 83, 86, 96, 98, 100, 102, 105, 107, 109,
-                110, 113, 115, 116, 120, 122, 124, 126, 128, 131, 135, 137, 143, 150, 161, 0, 5, 13, 15,
-                17, 27, 31, 33, 35, 39, 41, 163, 164, 166]
 
         geom = i[1]
         index = int(i[0])
@@ -315,7 +312,7 @@ class NAIPDataLoader(AbstractDataLoader):
         for fn in fns:
 
             year = int(fn.split("/")[2])
-            superres_image_path = '/oak/stanford/groups/deho/building_compliance/berkeley_naip_superres/{}_{}.tif'.format(
+            superres_image_path = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/2018_investigate/{}_{}.tif'.format(
                 index, year)
 
             skip = False
@@ -383,6 +380,9 @@ class NAIPDataLoader(AbstractDataLoader):
             images.append(full_image)
             masks.append(mask)
             years.append(year)
+
+        # DELETE THIS LATER
+        return
 
         ## CODE TO ADD 2020 NAIP imagery for Berkeley
         # Open pickle file to see which file to open
