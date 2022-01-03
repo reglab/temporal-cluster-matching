@@ -28,7 +28,7 @@ parser.add_argument('--parcel_type', required=False, default='no_parcel',
                     choices = ('no_parcel', 'parcel', 'parcel_dedup'),
                     help='Specify if using parcel type, dedup, etc.',)
 
-parser.add_argument('--superres', requires=True, choices=('yes', 'no'))
+parser.add_argument('--superres', required=True, choices=('yes', 'no'))
 
 group = parser.add_mutually_exclusive_group(required=True)
 group.add_argument('--buffer', type=float, help='Amount to buffer for defining a neighborhood. Note: this will be in terms of units of the dataset.')
