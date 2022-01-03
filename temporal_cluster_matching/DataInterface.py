@@ -269,20 +269,20 @@ class NAIPDataLoader(AbstractDataLoader):
                         continue
 
                     #### THIS CODE SEGMENT PRINTS OUT THE NAIP IMAGERY CENTERED ON THE ADU
-                    full_image_mask = np.ma.masked_where(full_image < 0, full_image)
-                    # copying metadata from original raster
-                    out_meta = f.meta.copy()
-
-                    # amending original metadata
-                    out_meta.update({'height': full_image.shape[1],
-                                     'width': full_image.shape[2],
-                                     'transform': full_transform})
-
-                    with rasterio.open(
-                            '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/2018_investigate/{}_{}.tif'.format(
-                                index, year),
-                            'w', **out_meta) as dst:
-                        dst.write(full_image_mask)
+                    # full_image_mask = np.ma.masked_where(full_image < 0, full_image)
+                    # # copying metadata from original raster
+                    # out_meta = f.meta.copy()
+                    #
+                    # # amending original metadata
+                    # out_meta.update({'height': full_image.shape[1],
+                    #                  'width': full_image.shape[2],
+                    #                  'transform': full_transform})
+                    #
+                    # with rasterio.open(
+                    #         '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/2018_investigate/{}_{}.tif'.format(
+                    #             index, year),
+                    #         'w', **out_meta) as dst:
+                    #     dst.write(full_image_mask)
                     ### END PRINT
 
                     full_image = np.rollaxis(full_image, 0, 3)
@@ -293,6 +293,52 @@ class NAIPDataLoader(AbstractDataLoader):
             images.append(full_image)
             masks.append(mask)
             years.append(year)
+
+        ## CODE TO ADD 2020 NAIP imagery for Berkeley
+        # Open pickle file to see which file to open
+        path_to_fn = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/2020/'
+        with open(path_to_fn + 'bounds.p', 'rb') as handle:
+            tif_bounds = pickle.load(handle)
+
+        fns = []  # this should be a list of just one--do this because we have a continue in the exception
+        for fn, bounds in tif_bounds.items():
+            if bounds.contains(shapely.geometry.shape(geom).centroid):
+                fns.append(fn)
+
+        for fn in fns:
+            year = 2020
+
+            with rasterio.Env(**RASTERIO_BEST_PRACTICES):
+                with rasterio.open(path_to_fn + fn) as f:
+                    try:
+                        mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False,
+                                                           all_touched=True)
+                    except Exception as e:
+                        print(index)
+                        print("Mask image not executed, skipping (year: {})".format(year))
+                        continue
+
+                    mask_image = np.rollaxis(mask_image, 0, 3)
+
+                    try:
+                        full_image, full_transform = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False,
+                                                                        pad=False,
+                                                                        all_touched=True)
+                    except Exception as e:
+                        print(index)
+                        print("full image not executed, skipping (year: {})".format(year))
+                        continue
+
+                    full_image = np.rollaxis(full_image, 0, 3)
+                    mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)
+                    mask[np.sum(mask_image == 0, axis=2) == 3] = 1
+
+            images.append(full_image)
+            masks.append(mask)
+            years.append(year)
+            break
+
+        return images, masks, years
 
     def get_data_stack_from_geom_superres(self, i, parcel, buffer, geom_crs="epsg:4326"):
 
@@ -312,7 +358,7 @@ class NAIPDataLoader(AbstractDataLoader):
         for fn in fns:
 
             year = int(fn.split("/")[2])
-            superres_image_path = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/2018_investigate/{}_{}.tif'.format(
+            superres_image_path = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/superres/{}_{}.tif'.format(
                 index, year)
 
             skip = False
@@ -381,24 +427,21 @@ class NAIPDataLoader(AbstractDataLoader):
             masks.append(mask)
             years.append(year)
 
-        # DELETE THIS LATER
-        return
 
         ## CODE TO ADD 2020 NAIP imagery for Berkeley
         # Open pickle file to see which file to open
-        path_to_fn = '/oak/stanford/groups/deho/building_compliance/berkeley_naip_2020/'
+        path_to_fn = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/2020/'
         with open(path_to_fn + 'bounds.p', 'rb') as handle:
             tif_bounds = pickle.load(handle)
 
         fns = []  # this should be a list of just one--do this because we have a continue in the exception
-        for fn in tif_bounds:
-            bounds = tif_bounds[fn]
-            if shapely.geometry.box(bounds[0], bounds[1], bounds[2], bounds[3]).contains(shapely.geometry.shape(geom).centroid):
+        for fn, bounds in tif_bounds.items():
+            if bounds.contains(shapely.geometry.shape(geom).centroid):
                 fns.append(fn)
 
         for fn in fns:
             year = 2020
-            superres_image_path = '/oak/stanford/groups/deho/building_compliance/berkeley_naip_superres/{}_{}.tif'.format(
+            superres_image_path = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/superres/{}_{}.tif'.format(
                 index, year)
 
             with rasterio.Env(**RASTERIO_BEST_PRACTICES):

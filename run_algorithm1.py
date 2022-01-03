@@ -24,9 +24,11 @@ parser.add_argument('--algorithm', default='kl',
 
 parser.add_argument('--num_clusters', type=int, required=False, help='Number of clusters to use in k-means step.')
 
-parser.add_argument('--parcel_type', required=True, default='no_parcel',
+parser.add_argument('--parcel_type', required=False, default='no_parcel',
                     choices = ('no_parcel', 'parcel', 'parcel_dedup'),
                     help='Specify if using parcel type, dedup, etc.',)
+
+parser.add_argument('--superres', requires=True, choices=('yes', 'no'))
 
 group = parser.add_mutually_exclusive_group(required=True)
 group.add_argument('--buffer', type=float, help='Amount to buffer for defining a neighborhood. Note: this will be in terms of units of the dataset.')
@@ -77,8 +79,6 @@ def main():
         geoms = utils.get_all_geoms_from_file1(args.dataset, index_done)
     elif args.parcel_type == 'parcel':
         geoms = utils.get_all_geoms_from_file_parcel(args.dataset, index_done)
-    else:
-        geoms = utils.get_all_geoms_from_file_parcel_dedup(args.dataset, index_done)
 
     dataloader = DataInterface.NAIPDataLoader()
     if args.buffer is not None and args.buffer > 1:
@@ -94,10 +94,10 @@ def main():
             print("%d/%d\t%0.2f seconds" % (count, len(geoms), time.time() - tic))
             tic = time.time()
 
-        if args.parcel_type == 'no_parcel':
-            data_images, masks, years = dataloader.get_data_stack_from_geom(i, parcel=False, buffer=args.buffer, geom_crs="epsg:4326")
+        if args.superres == 'yes':
+            data_images, masks, years = dataloader.get_data_stack_from_geom_superres(i, parcel=False, buffer=args.buffer, geom_crs="epsg:4326")
         else:
-            data_images, masks, years = dataloader.get_data_stack_from_geom(i, parcel=True, buffer=args.buffer,
+            data_images, masks, years = dataloader.get_data_stack_from_geom(i, parcel=False, buffer=args.buffer,
                                                                             geom_crs="epsg:4326")
 
         if args.algorithm == "kl":
