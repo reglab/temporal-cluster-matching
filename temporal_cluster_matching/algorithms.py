@@ -54,6 +54,7 @@ def calculate_change_values(index, years, images, masks, n_clusters, num_samples
         else:
             cluster_model = KMeans(n_clusters=n_clusters, n_init=3)
         features = image.reshape(h*w, c)
+        print(features)
 
         scaler = StandardScaler()
         features = scaler.fit_transform(features)
@@ -64,6 +65,8 @@ def calculate_change_values(index, years, images, masks, n_clusters, num_samples
             cluster_model.fit(features[np.random.choice(features.shape[0], size=num_samples_for_kmeans)])
             labels = cluster_model.predict(features)
         labels = labels.reshape(h,w)
+        print(labels.shape)
+        print(labels)
 
         # select the cluster labels that fall within the parcel and those outside of the parcel
         parcel_labels = labels[mask]
@@ -73,6 +76,7 @@ def calculate_change_values(index, years, images, masks, n_clusters, num_samples
         parcel_counts = np.bincount(parcel_labels.ravel(), minlength=n_clusters)
         neighborhood_counts = np.bincount(neighborhood_labels.ravel(), minlength=n_clusters)
 
+        print(parcel_labels.shape)
         if parcel_labels.shape[0] > 0:
             # normalize each vector of cluster index counts into discrete distributions
             parcel_distribution = (parcel_counts + 1e-5) / parcel_counts.sum()
