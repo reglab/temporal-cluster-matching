@@ -25,6 +25,7 @@ import planetary_computer as pc
 import tensorflow as tf
 
 import pyproj
+import cv2
 
 from . import utils
 
@@ -337,6 +338,105 @@ class NAIPDataLoader(AbstractDataLoader):
             masks.append(mask)
             years.append(year)
             break
+
+        return images, masks, years
+
+    def get_mean_and_std(x):
+        x_mean, x_std = cv2.meanStdDev(x)
+        x_mean = np.hstack(np.around(x_mean, 2))
+        x_std = np.hstack(np.around(x_std, 2))
+        return x_mean, x_std
+
+    def transform(t_std, t_mean, s_std, s_mean, s):
+        height, width, channel = s.shape
+        for i in range(0, height):
+            for j in range(0, width):
+                for k in range(0, channel):
+                    x = s[i, j, k]
+                    x = ((x - s_mean[k]) * (t_std[k] / s_std[k])) + t_mean[k]
+                    # round or +0.5
+                    x = round(x)
+                    # boundary check
+                    x = 0 if x < 0 else x
+                    x = 255 if x > 255 else x
+                    s[i, j, k] = x
+
+        return s
+
+    def get_data_stack_from_geom_colortrf(self, i, parcel, buffer, geom_crs="epsg:4326"):
+        geom = i[1]
+        index = int(i[0])
+
+        if parcel:
+            mask_geom, bounding_geom, superres_geom = get_mask_and_bounding_geoms(geom, i[2], buffer)
+        else:
+            mask_geom, bounding_geom, superres_geom = get_mask_and_bounding_geoms(geom, None, buffer)
+
+        """
+        Open 2020 superres file, get std and mean
+        Loop through the typical hoopla
+            open superres image for other years
+            mask image, mask bounding box
+            transform full_image, pass that over
+        """
+
+        ### open 2020 superres file
+        fp = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/superres'
+        img_2020 = cv2.imread(f"{fp}/{index}_2020.tif")
+
+        mean_2020, std_2020 = get_mean_and_std(img_2020)
+
+        years = [2012, 2014, 2016, 2018, 2020]
+        for year in years:
+            superres_image_path = f'{fp}/{index}_{year}.tif'
+
+        fns = self._get_fns_from_geom(geom, geom_crs)
+        years = []
+        images = []
+        masks = []
+        for fn in fns:
+
+            year = int(fn.split("/")[2])
+            superres_image_path = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/superres/{}_{}.tif'.format(
+                index, year)
+
+            with rasterio.Env(**RASTERIO_BEST_PRACTICES):
+                with rasterio.open(superres_image_path) as f:
+                    try:
+                        mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False,
+                                                           all_touched=True)
+                    except Exception as e:
+                        print(index)
+                        print("Mask image not executed, skipping (year: {})".format(year))
+                        continue
+
+                    mask_image = np.rollaxis(mask_image, 0, 3)
+
+                    try:
+                        full_image, full_transform = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False,
+                                                                        pad=False, all_touched=True)
+                    except Exception as e:
+                        print(index)
+                        print("full image not executed, skipping (year: {})".format(year))
+                        continue
+
+                    if year == 2020:
+                        new_full_image = np.rollaxis(full_image, 0, 3)
+                    else:
+                        full_image = np.rollaxis(full_image, 0, 3)[:,:,::-1]
+
+                        # transform full_image
+                        # i've confirmed that transforming a smaller image is NBD--will produce the same result
+                        mean_buf, std_buf = get_mean_and_std(full_image)
+                        # remember to flip back the transformed_image
+                        new_full_image = transform(std_2020, mean_2020, std_buf, mean_buf, full_image)[:,:,::-1]
+
+                    mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)
+                    mask[np.sum(mask_image == 0, axis=2) == 3] = 1
+
+            images.append(new_full_image)
+            masks.append(mask)
+            years.append(year)
 
         return images, masks, years
 
