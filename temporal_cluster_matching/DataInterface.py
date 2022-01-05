@@ -341,13 +341,13 @@ class NAIPDataLoader(AbstractDataLoader):
 
         return images, masks, years
 
-    def get_mean_and_std(x):
+    def get_mean_and_std(self, x):
         x_mean, x_std = cv2.meanStdDev(x)
         x_mean = np.hstack(np.around(x_mean, 2))
         x_std = np.hstack(np.around(x_std, 2))
         return x_mean, x_std
 
-    def transform(t_std, t_mean, s_std, s_mean, s):
+    def transform(self, t_std, t_mean, s_std, s_mean, s):
         height, width, channel = s.shape
         for i in range(0, height):
             for j in range(0, width):
@@ -427,9 +427,9 @@ class NAIPDataLoader(AbstractDataLoader):
 
                         # transform full_image
                         # i've confirmed that transforming a smaller image is NBD--will produce the same result
-                        mean_buf, std_buf = get_mean_and_std(full_image)
+                        mean_buf, std_buf = self.get_mean_and_std(full_image)
                         # remember to flip back the transformed_image
-                        new_full_image = transform(std_2020, mean_2020, std_buf, mean_buf, full_image)[:,:,::-1]
+                        new_full_image = self.transform(std_2020, mean_2020, std_buf, mean_buf, full_image)[:,:,::-1]
 
                     mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)
                     mask[np.sum(mask_image == 0, axis=2) == 3] = 1
