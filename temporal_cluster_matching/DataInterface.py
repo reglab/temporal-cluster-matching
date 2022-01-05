@@ -384,7 +384,7 @@ class NAIPDataLoader(AbstractDataLoader):
         fp = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/superres'
         img_2020 = cv2.imread(f"{fp}/{index}_2020.tif")
 
-        mean_2020, std_2020 = get_mean_and_std(img_2020)
+        mean_2020, std_2020 = self.get_mean_and_std(img_2020)
 
         years = [2012, 2014, 2016, 2018, 2020]
         for year in years:
