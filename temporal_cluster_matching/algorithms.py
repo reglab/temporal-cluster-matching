@@ -87,6 +87,84 @@ def calculate_change_values(index, years, images, masks, n_clusters, num_samples
     return divergences
 
 
+def calculate_change_values1(index, years, images, masks, n_clusters, num_samples_for_kmeans=10000, use_minibatch=False):
+    '''
+    Args:
+        imagery: A list of `numpy.ndarray` of shape (height, width, n_channels). This imagery should cover an area that is larger than the parcel of interest by some fixed distance (i.e. a buffer value).
+        masks: A list of boolean `numpy.ndarray` of shape (height, width) with `1` in locations where the parcel covers and `0` everywhere else.
+        n_clusters: The number of clusters to use in the k-means model.
+        num_samples_for_kmeans: An integer specifying the number of samples to use to fit the k-means model. If `None` then all pixels in the neighborhood + footprint are used, however this is probably overkill.
+        use_minibatch: A flag that indicates whether we should use MiniBatchKMeans over KMeans. MiniBatchKMeans should be much faster.
+
+    Returns:
+        divergences: A list of KL-divergence values
+    '''
+    divergences = []
+
+    parcel_counts_list = []
+    for image, mask, year in zip(images, masks, years):
+        if mask.shape[0] > image.shape[0]:
+            mask = mask[:image.shape[0], :]
+        elif mask.shape[0] < image.shape[0]:
+            image = image[:mask.shape[0], :, :]
+
+        if mask.shape[1] > image.shape[1]:
+            mask = mask[:, :image.shape[1]]
+        elif mask.shape[1] < image.shape[1]:
+            image = image[:, :mask.shape[1], :]
+
+        h, w, c = image.shape
+
+        if mask.shape[0] != h or mask.shape[1] != w:
+            print(index)
+            for i, m, y in zip(images, masks, years):
+                h1, w1, c1 = i.shape
+                print("Year: {}".format(y))
+                print("Width: image {} mask {}".format(w1, m.shape[1]))
+                print("Width: image {} mask {}".format(h1, m.shape[0]))
+        assert mask.shape[0] == h and mask.shape[1] == w
+
+        mask = mask.astype(bool)
+
+        # fit a k-means model and use it to cluster the image
+        if use_minibatch:
+            cluster_model = MiniBatchKMeans(n_clusters=n_clusters, n_init=3, batch_size=2000, compute_labels=True, init="random")
+        else:
+            cluster_model = KMeans(n_clusters=n_clusters, n_init=3)
+        features = image.reshape(h*w, c)
+
+        scaler = StandardScaler()
+        features = scaler.fit_transform(features)
+
+        if num_samples_for_kmeans is None or (h*w <= num_samples_for_kmeans):
+            labels = cluster_model.fit_predict(features)
+        else:
+            cluster_model.fit(features[np.random.choice(features.shape[0], size=num_samples_for_kmeans)])
+            labels = cluster_model.predict(features)
+        labels = labels.reshape(h,w)
+
+        # select the cluster labels that fall within the parcel and those outside of the parcel
+        parcel_labels = labels[mask]
+
+        # compute the frequency with which each cluster occurs in the parcel and outside of the parcel
+        parcel_counts = np.bincount(parcel_labels.ravel(), minlength=n_clusters)
+        parcel_counts_list.append(parcel_counts)
+
+    for i in range(len(parcel_counts_list)-1):
+        prev_year = parcel_counts_list[i]
+        next_year = parcel_counts_list[i+1]
+
+        prev_distribution = (prev_year + 1e-5) / prev_year.sum()
+        next_distribution = (next_year + 1e-5) / next_year.sum()
+
+        # compute the KL divergence between the two distributions
+        divergence = scipy.stats.entropy(prev_distribution, next_distribution)
+        divergences.append(divergence)
+
+    return divergences
+
+
+
 def calculate_change_values_with_color(images, masks):
     '''
     Args:
