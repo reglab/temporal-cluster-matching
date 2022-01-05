@@ -386,19 +386,12 @@ class NAIPDataLoader(AbstractDataLoader):
 
         mean_2020, std_2020 = self.get_mean_and_std(img_2020)
 
-        years = [2012, 2014, 2016, 2018, 2020]
-        for year in years:
-            superres_image_path = f'{fp}/{index}_{year}.tif'
-
-        fns = self._get_fns_from_geom(geom, geom_crs)
-        years = []
+        years_list = [2012, 2014, 2016, 2018, 2020]
         images = []
         masks = []
-        for fn in fns:
-
-            year = int(fn.split("/")[2])
-            superres_image_path = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/superres/{}_{}.tif'.format(
-                index, year)
+        years = []
+        for year in years_list:
+            superres_image_path = f'{fp}/{index}_{year}.tif'
 
             with rasterio.Env(**RASTERIO_BEST_PRACTICES):
                 with rasterio.open(superres_image_path) as f:
