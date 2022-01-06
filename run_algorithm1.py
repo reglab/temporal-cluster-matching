@@ -28,7 +28,7 @@ parser.add_argument('--parcel_type', required=False, default='no_parcel',
                     choices = ('no_parcel', 'parcel', 'parcel_dedup'),
                     help='Specify if using parcel type, dedup, etc.',)
 
-parser.add_argument('--method', required=True, default='default', choices=('superres', 'colortrf', 'default', 'colortrf_within'))
+parser.add_argument('--method', required=True, default='default', choices=('superres', 'colortrf', 'default'))
 
 group = parser.add_mutually_exclusive_group(required=True)
 group.add_argument('--buffer', type=float, help='Amount to buffer for defining a neighborhood. Note: this will be in terms of units of the dataset.')
@@ -103,11 +103,8 @@ def main():
                                                                             geom_crs="epsg:4326")
 
         if args.algorithm == "kl":
-            if args.method == 'colortrf_within':
-                divergence_values = algorithms.calculate_change_values1(i[0], years, data_images, masks, n_clusters=args.num_clusters)
-            else:
-                divergence_values = algorithms.calculate_change_values(i[0], years, data_images, masks,
-                                                                        n_clusters=args.num_clusters)
+            divergence_values = algorithms.calculate_change_values(i[0], years, data_images, masks,
+                                                                    n_clusters=args.num_clusters)
         elif args.algorithm == "color":
             divergence_values = algorithms.calculate_change_values_with_color(data_images, masks)
 
@@ -119,20 +116,6 @@ def main():
             for divergence in divergence_values:
                 f.write("%0.4f," % (divergence))
             f.write("\n")
-
-        # if args.algorithm == "kl":
-        #     divergence_values = algorithms.calculate_change_values(i[0], years, data_images, masks, n_clusters=args.num_clusters)
-        # elif args.algorithm == "color":
-        #     divergence_values = algorithms.calculate_change_values_with_color(data_images, masks)
-        #
-        # with open(output_fn, "a") as f:
-        #     f.write("%d," % (int(i[0])))
-        #     for year in years:
-        #         f.write("%d," % (year))
-        #     f.write("|,")
-        #     for divergence in divergence_values:
-        #         f.write("%0.4f," % (divergence))
-        #     f.write("\n")
 
         count += 1
 
