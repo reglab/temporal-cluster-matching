@@ -28,7 +28,7 @@ parser.add_argument('--parcel_type', required=False, default='no_parcel',
                     choices = ('no_parcel', 'parcel', 'parcel_dedup'),
                     help='Specify if using parcel type, dedup, etc.',)
 
-parser.add_argument('--method', required=True, choices=('superres', 'colortrf', 'default'))
+parser.add_argument('--method', required=True, choices=('superres', 'colortrf', 'default', 'colortrf_within'))
 
 group = parser.add_mutually_exclusive_group(required=True)
 group.add_argument('--buffer', type=float, help='Amount to buffer for defining a neighborhood. Note: this will be in terms of units of the dataset.')
@@ -96,20 +96,24 @@ def main():
 
         if args.method == 'superres':
             data_images, masks, years = dataloader.get_data_stack_from_geom_superres(i, parcel=False, buffer=args.buffer, geom_crs="epsg:4326")
-        elif args.method == 'colortrf':
+        elif 'colortrf' in args.method:
             data_images, masks, years = dataloader.get_data_stack_from_geom_colortrf(i, parcel=False, buffer=args.buffer, geom_crs="epsg:4326")
         else:
             data_images, masks, years = dataloader.get_data_stack_from_geom(i, parcel=False, buffer=args.buffer,
                                                                             geom_crs="epsg:4326")
 
         if args.algorithm == "kl":
-            divergence_values = algorithms.calculate_change_values1(i[0], years, data_images, masks, n_clusters=args.num_clusters)
+            if args.method == 'colortrf_within':
+                divergence_values = algorithms.calculate_change_values1(i[0], years, data_images, masks, n_clusters=args.num_clusters)
+            else:
+                divergence_values = algorithms.calculate_change_values(i[0], years, data_images, masks,
+                                                                        n_clusters=args.num_clusters)
         elif args.algorithm == "color":
             divergence_values = algorithms.calculate_change_values_with_color(data_images, masks)
 
         with open(output_fn, "a") as f:
             f.write("%d," % (int(i[0])))
-            for year in years[1:]:
+            for year in years:
                 f.write("%d," % (year))
             f.write("|,")
             for divergence in divergence_values:
