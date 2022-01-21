@@ -271,20 +271,23 @@ class NAIPDataLoader(AbstractDataLoader):
                         continue
 
                     #### THIS CODE SEGMENT PRINTS OUT THE NAIP IMAGERY CENTERED ON THE ADU
-                    # full_image_mask = np.ma.masked_where(full_image < 0, full_image)
-                    # # copying metadata from original raster
-                    # out_meta = f.meta.copy()
-                    #
-                    # # amending original metadata
-                    # out_meta.update({'height': full_image.shape[1],
-                    #                  'width': full_image.shape[2],
-                    #                  'transform': full_transform})
-                    #
-                    # with rasterio.open(
-                    #         '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/2018_investigate/{}_{}.tif'.format(
-                    #             index, year),
-                    #         'w', **out_meta) as dst:
-                    #     dst.write(full_image_mask)
+                    full_image_mask = np.ma.masked_where(full_image < 0, full_image)
+                    # copying metadata from original raster
+                    out_meta = f.meta.copy()
+                    # only take the RGB channels, not IR
+                    out_meta['count'] = 3
+
+                    # amending original metadata
+                    out_meta.update({'height': full_image.shape[1],
+                                     'width': full_image.shape[2],
+                                     'transform': full_transform})
+
+                    # print_dir = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/2018_investigate/'
+                    print_dir = '../los_angeles_naip'
+                    with rasterio.open(
+                            f'../los_angeles_naip/{buffer}/{index}_{year}.tif',
+                            'w', **out_meta) as dst:
+                        dst.write(full_image_mask[:3,:,:])
                     ### END PRINT
 
                     full_image = np.rollaxis(full_image, 0, 3)
@@ -298,47 +301,67 @@ class NAIPDataLoader(AbstractDataLoader):
 
         ## CODE TO ADD 2020 NAIP imagery for Berkeley
         # Open pickle file to see which file to open
-        # path_to_fn = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/2020/'
-        # with open(path_to_fn + 'bounds.p', 'rb') as handle:
-        #     tif_bounds = pickle.load(handle)
-        #
-        # fns = []  # this should be a list of just one--do this because we have a continue in the exception
-        # for fn, bounds in tif_bounds.items():
-        #     if bounds.contains(shapely.geometry.shape(geom).centroid):
-        #         fns.append(fn)
-        #
-        # for fn in fns:
-        #     year = 2020
-        #
-        #     with rasterio.Env(**RASTERIO_BEST_PRACTICES):
-        #         with rasterio.open(path_to_fn + fn) as f:
-        #             try:
-        #                 mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False,
-        #                                                    all_touched=True)
-        #             except Exception as e:
-        #                 print(index)
-        #                 print("Mask image not executed, skipping (year: {})".format(year))
-        #                 continue
-        #
-        #             mask_image = np.rollaxis(mask_image, 0, 3)
-        #
-        #             try:
-        #                 full_image, full_transform = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False,
-        #                                                                 pad=False,
-        #                                                                 all_touched=True)
-        #             except Exception as e:
-        #                 print(index)
-        #                 print("full image not executed, skipping (year: {})".format(year))
-        #                 continue
-        #
-        #             full_image = np.rollaxis(full_image, 0, 3)
-        #             mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)
-        #             mask[np.sum(mask_image == 0, axis=2) == 4] = 1
-        #
-        #     images.append(full_image)
-        #     masks.append(mask)
-        #     years.append(year)
-        #     break
+        path_to_fn = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/2020/'
+        with open(path_to_fn + 'bounds.p', 'rb') as handle:
+            tif_bounds = pickle.load(handle)
+
+        fns = []  # this should be a list of just one--do this because we have a continue in the exception
+        for fn, bounds in tif_bounds.items():
+            if bounds.contains(shapely.geometry.shape(geom).centroid):
+                fns.append(fn)
+
+        for fn in fns:
+            year = 2020
+
+            with rasterio.Env(**RASTERIO_BEST_PRACTICES):
+                with rasterio.open(path_to_fn + fn) as f:
+                    try:
+                        mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False,
+                                                           all_touched=True)
+                    except Exception as e:
+                        print(index)
+                        print("Mask image not executed, skipping (year: {})".format(year))
+                        continue
+
+                    mask_image = np.rollaxis(mask_image, 0, 3)
+
+                    try:
+                        full_image, full_transform = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False,
+                                                                        pad=False,
+                                                                        all_touched=True)
+                    except Exception as e:
+                        print(index)
+                        print("full image not executed, skipping (year: {})".format(year))
+                        continue
+
+                    #### THIS CODE SEGMENT PRINTS OUT THE NAIP IMAGERY CENTERED ON THE ADU
+                    full_image_mask = np.ma.masked_where(full_image < 0, full_image)
+                    # copying metadata from original raster
+                    out_meta = f.meta.copy()
+                    # only take the RGB channels, not IR
+                    out_meta['count'] = 3
+
+                    # amending original metadata
+                    out_meta.update({'height': full_image.shape[1],
+                                     'width': full_image.shape[2],
+                                     'transform': full_transform})
+
+                    # print_dir = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/2018_investigate/'
+                    print_dir = '../los_angeles_naip'
+                    with rasterio.open(
+                            f'../los_angeles_naip/{buffer}/{index}_{year}.tif',
+                            'w', **out_meta) as dst:
+                        dst.write(full_image_mask[:3, :, :])
+                    ### END PRINT
+
+                    full_image = np.rollaxis(full_image, 0, 3)
+                    mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)
+                    mask[np.sum(mask_image == 0, axis=2) == 4] = 1
+
+            images.append(full_image)
+            masks.append(mask)
+            years.append(year)
+            break
 
         return images, masks, years
 

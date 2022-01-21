@@ -102,20 +102,20 @@ def main():
             data_images, masks, years = dataloader.get_data_stack_from_geom(i, parcel=False, buffer=args.buffer,
                                                                             geom_crs="epsg:4326")
 
-        if args.algorithm == "kl":
-            divergence_values = algorithms.calculate_change_values(i[0], years, data_images, masks,
-                                                                    n_clusters=args.num_clusters)
-        elif args.algorithm == "color":
-            divergence_values = algorithms.calculate_change_values_with_color(data_images, masks)
-
-        with open(output_fn, "a") as f:
-            f.write("%d," % (int(i[0])))
-            for year in years:
-                f.write("%d," % (year))
-            f.write("|,")
-            for divergence in divergence_values:
-                f.write("%0.4f," % (divergence))
-            f.write("\n")
+        # if args.algorithm == "kl":
+        #     divergence_values = algorithms.calculate_change_values(i[0], years, data_images, masks,
+        #                                                             n_clusters=args.num_clusters)
+        # elif args.algorithm == "color":
+        #     divergence_values = algorithms.calculate_change_values_with_color(data_images, masks)
+        #
+        # with open(output_fn, "a") as f:
+        #     f.write("%d," % (int(i[0])))
+        #     for year in years:
+        #         f.write("%d," % (year))
+        #     f.write("|,")
+        #     for divergence in divergence_values:
+        #         f.write("%0.4f," % (divergence))
+        #     f.write("\n")
 
         count += 1
 
