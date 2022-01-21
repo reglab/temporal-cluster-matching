@@ -254,7 +254,7 @@ class NAIPDataLoader(AbstractDataLoader):
                 with rasterio.open(utils.NAIP_BLOB_ROOT + fn) as f:
                     try:
                         mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False,
-                                                           all_touched=True)
+                                                           all_touched=True, filled=True)
                     except Exception as e:
                         print(index)
                         print("Mask image not executed, skipping (year: {})".format(year))
@@ -264,7 +264,7 @@ class NAIPDataLoader(AbstractDataLoader):
 
                     try:
                         full_image, full_transform = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False,
-                                                                        pad=False, all_touched=True)
+                                                                        pad=False, all_touched=True, filled=True)
                     except Exception as e:
                         print(index)
                         print("full image not executed, skipping (year: {})".format(year))
@@ -285,7 +285,7 @@ class NAIPDataLoader(AbstractDataLoader):
                     # print_dir = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/2018_investigate/'
                     print_dir = '../los_angeles_naip'
                     with rasterio.open(
-                            f'../los_angeles_naip/{buffer}/{index}_{year}.tif',
+                            f'../los_angeles_naip/{buffer}/{index}_{year}.png',
                             'w', **out_meta) as dst:
                         dst.write(full_image_mask[:3,:,:])
                     ### END PRINT
@@ -317,7 +317,7 @@ class NAIPDataLoader(AbstractDataLoader):
                 with rasterio.open(path_to_fn + fn) as f:
                     try:
                         mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False,
-                                                           all_touched=True)
+                                                           all_touched=True, filled=True)
                     except Exception as e:
                         print(index)
                         print("Mask image not executed, skipping (year: {})".format(year))
@@ -328,7 +328,7 @@ class NAIPDataLoader(AbstractDataLoader):
                     try:
                         full_image, full_transform = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False,
                                                                         pad=False,
-                                                                        all_touched=True)
+                                                                        all_touched=True, filled=True)
                     except Exception as e:
                         print(index)
                         print("full image not executed, skipping (year: {})".format(year))
@@ -349,7 +349,7 @@ class NAIPDataLoader(AbstractDataLoader):
                     # print_dir = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/2018_investigate/'
                     print_dir = '../los_angeles_naip'
                     with rasterio.open(
-                            f'../los_angeles_naip/{buffer}/{index}_{year}.tif',
+                            f'../los_angeles_naip/{buffer}/{index}_{year}.png',
                             'w', **out_meta) as dst:
                         dst.write(full_image_mask[:3, :, :])
                     ### END PRINT
