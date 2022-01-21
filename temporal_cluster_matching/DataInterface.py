@@ -254,7 +254,7 @@ class NAIPDataLoader(AbstractDataLoader):
                 with rasterio.open(utils.NAIP_BLOB_ROOT + fn) as f:
                     try:
                         mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False,
-                                                           all_touched=True, filled=True)
+                                                           all_touched=True, filled=True, nodata = 1)
                     except Exception as e:
                         print(index)
                         print("Mask image not executed, skipping (year: {})".format(year))
@@ -264,7 +264,7 @@ class NAIPDataLoader(AbstractDataLoader):
 
                     try:
                         full_image, full_transform = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False,
-                                                                        pad=False, all_touched=True, filled=True)
+                                                                        pad=False, all_touched=True, filled=True, nodata = 1)
                     except Exception as e:
                         print(index)
                         print("full image not executed, skipping (year: {})".format(year))
@@ -317,7 +317,7 @@ class NAIPDataLoader(AbstractDataLoader):
                 with rasterio.open(path_to_fn + fn) as f:
                     try:
                         mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False,
-                                                           all_touched=True, filled=True)
+                                                           all_touched=True, filled=True, nodata = 1)
                     except Exception as e:
                         print(index)
                         print("Mask image not executed, skipping (year: {})".format(year))
@@ -328,7 +328,7 @@ class NAIPDataLoader(AbstractDataLoader):
                     try:
                         full_image, full_transform = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False,
                                                                         pad=False,
-                                                                        all_touched=True, filled=True)
+                                                                        all_touched=True, filled=True, nodata = 1)
                     except Exception as e:
                         print(index)
                         print("full image not executed, skipping (year: {})".format(year))
@@ -340,6 +340,8 @@ class NAIPDataLoader(AbstractDataLoader):
                     out_meta = f.meta.copy()
                     # only take the RGB channels, not IR
                     out_meta['count'] = 3
+                    
+                    print(full_image[:3, :, :])
 
                     # amending original metadata
                     out_meta.update({'height': full_image.shape[1],
