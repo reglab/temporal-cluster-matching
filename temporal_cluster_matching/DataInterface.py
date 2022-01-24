@@ -288,10 +288,10 @@ class NAIPDataLoader(AbstractDataLoader):
 
                     if prediction is not None:
                         out_profile = f.profile.copy()
-                        out_aff = rasterio.Affine(superres_transform[0] / 4, superres_transform[1],
-                                                  superres_transform[2],
-                                                  superres_transform[3], superres_transform[4] / 4,
-                                                  superres_transform[5])
+                        out_aff = rasterio.Affine(full_transform[0] / 4, full_transform[1],
+                                                  full_transform[2],
+                                                  full_transform[3], full_transform[4] / 4,
+                                                  full_transform[5])
 
                         out_profile.update({'count': 3, 'height': prediction.shape[1], 'width': prediction.shape[2],
                                             'transform': out_aff})
@@ -379,10 +379,10 @@ class NAIPDataLoader(AbstractDataLoader):
 
                     if prediction is not None:
                         out_profile = f.profile.copy()
-                        out_aff = rasterio.Affine(superres_transform[0] / 4, superres_transform[1],
-                                                  superres_transform[2],
-                                                  superres_transform[3], superres_transform[4] / 4,
-                                                  superres_transform[5])
+                        out_aff = rasterio.Affine(full_transform[0] / 4, full_transform[1],
+                                                  full_transform[2],
+                                                  full_transform[3], full_transform[4] / 4,
+                                                  full_transform[5])
 
                         out_profile.update({'count': 3, 'height': prediction.shape[1], 'width': prediction.shape[2],
                                             'transform': out_aff})
