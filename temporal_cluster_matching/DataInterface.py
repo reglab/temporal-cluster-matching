@@ -237,7 +237,7 @@ class NAIPDataLoader(AbstractDataLoader):
     def get_data_stack_from_geom(self, i, parcel, buffer, geom_crs="epsg:4326"):
         geom = i[1]
         index = int(i[0])
-
+        model_path = '../all_buildings/scripts/berkeley/checkpoints/EDSR_x4.pb'
 
         if parcel:
             mask_geom, bounding_geom, superres_geom = get_mask_and_bounding_geoms(geom, i[2], buffer)
@@ -270,24 +270,51 @@ class NAIPDataLoader(AbstractDataLoader):
                         print("full image not executed, skipping (year: {})".format(year))
                         continue
 
+                    superres_image_path = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/superres_0.0001/{}_{}.png'.format(
+                        index, year)
                     #### THIS CODE SEGMENT PRINTS OUT THE NAIP IMAGERY CENTERED ON THE ADU
-                    full_image_mask = np.ma.masked_where(full_image < 0, full_image)
+                    # full_image_mask = np.ma.masked_where(full_image < 0, full_image)
+                    pic = np.transpose(full_image, (1, 2, 0))[:, :, :3]
+                    with tf.compat.v1.Session() as persisted_sess:
+                        with tf.compat.v1.gfile.FastGFile(model_path, 'rb') as m:
+                            graph_def = tf.compat.v1.GraphDef()
+                            graph_def.ParseFromString(m.read())
+                            persisted_sess.graph.as_default()
+                            tf.import_graph_def(graph_def)
+
+                            output = persisted_sess.graph.get_tensor_by_name('import/NCHW_output:0')
+                            prediction = persisted_sess.run(output, {'import/IteratorGetNext:0': [pic]})
+                            prediction = prediction[0]
+
+                    if prediction is not None:
+                        out_profile = f.profile.copy()
+                        out_aff = rasterio.Affine(superres_transform[0] / 4, superres_transform[1],
+                                                  superres_transform[2],
+                                                  superres_transform[3], superres_transform[4] / 4,
+                                                  superres_transform[5])
+
+                        out_profile.update({'count': 3, 'height': prediction.shape[1], 'width': prediction.shape[2],
+                                            'transform': out_aff})
+
+                        with rasterio.open(superres_image_path, 'w', **out_profile) as dst:
+                            dst.write(prediction)
+
                     # copying metadata from original raster
-                    out_meta = f.meta.copy()
-                    # only take the RGB channels, not IR
-                    out_meta['count'] = 3
-
-                    # amending original metadata
-                    out_meta.update({'height': full_image.shape[1],
-                                     'width': full_image.shape[2],
-                                     'transform': full_transform})
-
-                    # print_dir = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/2018_investigate/'
-                    print_dir = '../los_angeles_naip'
-                    with rasterio.open(
-                            f'../los_angeles_naip/{buffer}/{index}_{year}.png',
-                            'w', **out_meta) as dst:
-                        dst.write(full_image_mask[:3,:,:])
+                    # out_meta = f.meta.copy()
+                    # # only take the RGB channels, not IR
+                    # out_meta['count'] = 3
+                    #
+                    # # amending original metadata
+                    # out_meta.update({'height': full_image.shape[1],
+                    #                  'width': full_image.shape[2],
+                    #                  'transform': full_transform})
+                    #
+                    # # print_dir = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/2018_investigate/'
+                    # print_dir = '../los_angeles_naip'
+                    # with rasterio.open(
+                    #         f'../los_angeles_naip/{buffer}/{index}_{year}.png',
+                    #         'w', **out_meta) as dst:
+                    #     dst.write(full_image_mask[:3,:,:])
                     ### END PRINT
 
                     full_image = np.rollaxis(full_image, 0, 3)
@@ -301,6 +328,7 @@ class NAIPDataLoader(AbstractDataLoader):
 
         ## CODE TO ADD 2020 NAIP imagery for Berkeley
         # Open pickle file to see which file to open
+
         path_to_fn = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/2020/'
         with open(path_to_fn + 'bounds.p', 'rb') as handle:
             tif_bounds = pickle.load(handle)
@@ -334,24 +362,52 @@ class NAIPDataLoader(AbstractDataLoader):
                         print("full image not executed, skipping (year: {})".format(year))
                         continue
 
+                    superres_image_path = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/superres_0.0001/{}_{}.png'.format(
+                        index, year)
+
+                    pic = np.transpose(full_image, (1, 2, 0))[:, :, :3]
+                    with tf.compat.v1.Session() as persisted_sess:
+                        with tf.compat.v1.gfile.FastGFile(model_path, 'rb') as m:
+                            graph_def = tf.compat.v1.GraphDef()
+                            graph_def.ParseFromString(m.read())
+                            persisted_sess.graph.as_default()
+                            tf.import_graph_def(graph_def)
+
+                            output = persisted_sess.graph.get_tensor_by_name('import/NCHW_output:0')
+                            prediction = persisted_sess.run(output, {'import/IteratorGetNext:0': [pic]})
+                            prediction = prediction[0]
+
+                    if prediction is not None:
+                        out_profile = f.profile.copy()
+                        out_aff = rasterio.Affine(superres_transform[0] / 4, superres_transform[1],
+                                                  superres_transform[2],
+                                                  superres_transform[3], superres_transform[4] / 4,
+                                                  superres_transform[5])
+
+                        out_profile.update({'count': 3, 'height': prediction.shape[1], 'width': prediction.shape[2],
+                                            'transform': out_aff})
+
+                        with rasterio.open(superres_image_path, 'w', **out_profile) as dst:
+                            dst.write(prediction)
+
                     #### THIS CODE SEGMENT PRINTS OUT THE NAIP IMAGERY CENTERED ON THE ADU
-                    full_image_mask = np.ma.masked_where(full_image < 0, full_image)
-                    # copying metadata from original raster
-                    out_meta = f.meta.copy()
-                    # only take the RGB channels, not IR
-                    out_meta['count'] = 3
-
-                    # amending original metadata
-                    out_meta.update({'height': full_image.shape[1],
-                                     'width': full_image.shape[2],
-                                     'transform': full_transform})
-
-                    # print_dir = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/2018_investigate/'
-                    print_dir = '../los_angeles_naip'
-                    with rasterio.open(
-                            f'../los_angeles_naip/{buffer}/{index}_{year}.png',
-                            'w', **out_meta) as dst:
-                        dst.write(full_image_mask[:3, :, :])
+                    # full_image_mask = np.ma.masked_where(full_image < 0, full_image)
+                    # # copying metadata from original raster
+                    # out_meta = f.meta.copy()
+                    # # only take the RGB channels, not IR
+                    # out_meta['count'] = 3
+                    #
+                    # # amending original metadata
+                    # out_meta.update({'height': full_image.shape[1],
+                    #                  'width': full_image.shape[2],
+                    #                  'transform': full_transform})
+                    #
+                    # # print_dir = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/2018_investigate/'
+                    # print_dir = '../los_angeles_naip'
+                    # with rasterio.open(
+                    #         f'../los_angeles_naip/{buffer}/{index}_{year}.png',
+                    #         'w', **out_meta) as dst:
+                    #     dst.write(full_image_mask[:3, :, :])
                     ### END PRINT
 
                     full_image = np.rollaxis(full_image, 0, 3)
@@ -365,97 +421,6 @@ class NAIPDataLoader(AbstractDataLoader):
 
         return images, masks, years
 
-    def get_mean_and_std(self, x):
-        x_mean, x_std = cv2.meanStdDev(x)
-        x_mean = np.hstack(np.around(x_mean, 2))
-        x_std = np.hstack(np.around(x_std, 2))
-        return x_mean, x_std
-
-    def transform(self, t_std, t_mean, s_std, s_mean, s):
-        height, width, channel = s.shape
-        for i in range(0, height):
-            for j in range(0, width):
-                for k in range(0, channel):
-                    x = s[i, j, k]
-                    x = ((x - s_mean[k]) * (t_std[k] / s_std[k])) + t_mean[k]
-                    # round or +0.5
-                    x = round(x)
-                    # boundary check
-                    x = 0 if x < 0 else x
-                    x = 255 if x > 255 else x
-                    s[i, j, k] = x
-
-        return s
-
-    def get_data_stack_from_geom_colortrf(self, i, parcel, buffer, geom_crs="epsg:4326"):
-        geom = i[1]
-        index = int(i[0])
-
-        if parcel:
-            mask_geom, bounding_geom, superres_geom = get_mask_and_bounding_geoms(geom, i[2], buffer)
-        else:
-            mask_geom, bounding_geom, superres_geom = get_mask_and_bounding_geoms(geom, None, buffer)
-
-        """
-        Open 2020 superres file, get std and mean
-        Loop through the typical hoopla
-            open superres image for other years
-            mask image, mask bounding box
-            transform full_image, pass that over
-        """
-
-        ### open 2020 superres file
-        fp = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/superres'
-        img_2020 = cv2.imread(f"{fp}/{index}_2020.tif")
-
-        mean_2020, std_2020 = self.get_mean_and_std(img_2020)
-
-        years_list = [2012, 2014, 2016, 2018, 2020]
-        images = []
-        masks = []
-        years = []
-        for year in years_list:
-            superres_image_path = f'{fp}/{index}_{year}.tif'
-
-            with rasterio.Env(**RASTERIO_BEST_PRACTICES):
-                with rasterio.open(superres_image_path) as f:
-                    try:
-                        mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False,
-                                                           all_touched=True)
-                    except Exception as e:
-                        print(index)
-                        print("Mask image not executed, skipping (year: {})".format(year))
-                        continue
-
-                    mask_image = np.rollaxis(mask_image, 0, 3)
-
-                    try:
-                        full_image, full_transform = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False,
-                                                                        pad=False, all_touched=True)
-                    except Exception as e:
-                        print(index)
-                        print("full image not executed, skipping (year: {})".format(year))
-                        continue
-
-                    if year == 2020:
-                        new_full_image = np.rollaxis(full_image, 0, 3)
-                    else:
-                        full_image = np.rollaxis(full_image, 0, 3)[:,:,::-1]
-
-                        # transform full_image
-                        # i've confirmed that transforming a smaller image is NBD--will produce the same result
-                        mean_buf, std_buf = self.get_mean_and_std(full_image)
-                        # remember to flip back the transformed_image
-                        new_full_image = self.transform(std_2020, mean_2020, std_buf, mean_buf, full_image)[:,:,::-1]
-
-                    mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)
-                    mask[np.sum(mask_image == 0, axis=2) == 3] = 1
-
-            images.append(new_full_image)
-            masks.append(mask)
-            years.append(year)
-
-        return images, masks, years
 
     def get_data_stack_from_geom_superres(self, i, parcel, buffer, geom_crs="epsg:4326"):
 
