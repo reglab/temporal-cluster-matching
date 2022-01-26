@@ -338,8 +338,6 @@ class NAIPDataLoader(AbstractDataLoader):
         for fn, bounds in tif_bounds.items():
             if bounds.contains(shapely.geometry.shape(geom).centroid):
                 fns.append(fn)
-        print(index)
-        print(fns)
 
         for fn in fns:
             year = 2020
@@ -365,36 +363,34 @@ class NAIPDataLoader(AbstractDataLoader):
                         print("full image not executed, skipping (year: {})".format(year))
                         continue
 
-                    print(full_image.shape)
+                    if not os.path.exists(superres_image_path):
+                        superres_image_path = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/superres_0.0001/{}_{}.png'.format(
+                            index, year)
 
-                    # if not os.path.exists(superres_image_path):
-                    #     superres_image_path = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/superres_0.0001/{}_{}.png'.format(
-                    #         index, year)
-                    #
-                    #     pic = np.transpose(full_image, (1, 2, 0))[:, :, :3]
-                    #     with tf.compat.v1.Session() as persisted_sess:
-                    #         with tf.compat.v1.gfile.FastGFile(model_path, 'rb') as m:
-                    #             graph_def = tf.compat.v1.GraphDef()
-                    #             graph_def.ParseFromString(m.read())
-                    #             persisted_sess.graph.as_default()
-                    #             tf.import_graph_def(graph_def)
-                    #
-                    #             output = persisted_sess.graph.get_tensor_by_name('import/NCHW_output:0')
-                    #             prediction = persisted_sess.run(output, {'import/IteratorGetNext:0': [pic]})
-                    #             prediction = prediction[0]
-                    #
-                    #     if prediction is not None:
-                    #         out_profile = f.profile.copy()
-                    #         out_aff = rasterio.Affine(full_transform[0] / 4, full_transform[1],
-                    #                                   full_transform[2],
-                    #                                   full_transform[3], full_transform[4] / 4,
-                    #                                   full_transform[5])
-                    #
-                    #         out_profile.update({'count': 3, 'height': prediction.shape[1], 'width': prediction.shape[2],
-                    #                             'transform': out_aff})
-                    #
-                    #         with rasterio.open(superres_image_path, 'w', **out_profile) as dst:
-                    #             dst.write(prediction)
+                        pic = np.transpose(full_image, (1, 2, 0))[:, :, :3]
+                        with tf.compat.v1.Session() as persisted_sess:
+                            with tf.compat.v1.gfile.FastGFile(model_path, 'rb') as m:
+                                graph_def = tf.compat.v1.GraphDef()
+                                graph_def.ParseFromString(m.read())
+                                persisted_sess.graph.as_default()
+                                tf.import_graph_def(graph_def)
+
+                                output = persisted_sess.graph.get_tensor_by_name('import/NCHW_output:0')
+                                prediction = persisted_sess.run(output, {'import/IteratorGetNext:0': [pic]})
+                                prediction = prediction[0]
+
+                        if prediction is not None:
+                            out_profile = f.profile.copy()
+                            out_aff = rasterio.Affine(full_transform[0] / 4, full_transform[1],
+                                                      full_transform[2],
+                                                      full_transform[3], full_transform[4] / 4,
+                                                      full_transform[5])
+
+                            out_profile.update({'count': 3, 'height': prediction.shape[1], 'width': prediction.shape[2],
+                                                'transform': out_aff})
+
+                            with rasterio.open(superres_image_path, 'w', **out_profile) as dst:
+                                dst.write(prediction)
 
                     #### THIS CODE SEGMENT PRINTS OUT THE NAIP IMAGERY CENTERED ON THE ADU
                     # full_image_mask = np.ma.masked_where(full_image < 0, full_image)
