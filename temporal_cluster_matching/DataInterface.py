@@ -363,9 +363,9 @@ class NAIPDataLoader(AbstractDataLoader):
                         print("full image not executed, skipping (year: {})".format(year))
                         continue
 
+                    superres_image_path = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/superres_0.0001/{}_{}.png'.format(
+                        index, year)
                     if not os.path.exists(superres_image_path):
-                        superres_image_path = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/superres_0.0001/{}_{}.png'.format(
-                            index, year)
 
                         pic = np.transpose(full_image, (1, 2, 0))[:, :, :3]
                         with tf.compat.v1.Session() as persisted_sess:
