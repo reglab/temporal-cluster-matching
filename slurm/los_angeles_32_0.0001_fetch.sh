@@ -9,4 +9,4 @@
 
 cd ../
 
-singularity exec $GROUP_HOME/singularity/cafo_permit+tcm_10-21-21.sif python run_algorithm1.py --dataset "../all_buildings/data/input/los_angeles/tcm.geojson" --num_clusters 32 --buffer 0.0001 --output_dir ../all_buildings/data/output/los_angeles/temp --algorithm kl --method default
+singularity exec $GROUP_HOME/singularity/cafo_permit+tcm_10-21-21.sif python run_algorithm1.py --dataset "../all_buildings/data/input/los_angeles/missing_temp.geojson" --num_clusters 32 --buffer 0.0001 --output_dir ../all_buildings/data/output/los_angeles/temp --algorithm kl --method default
