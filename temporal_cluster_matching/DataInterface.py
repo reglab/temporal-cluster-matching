@@ -235,6 +235,8 @@ class NAIPDataLoader(AbstractDataLoader):
     def get_data_stack_from_geom(self, i, parcel, buffer, geom_crs="epsg:4326"):
         geom = i[1]
         index = int(i[0])
+        with open('log.txt', 'a') as f:
+            f.write(f'{index}\n')
         # model_path = '../all_buildings/scripts/berkeley/checkpoints/EDSR_x4.pb'
 
         if parcel:

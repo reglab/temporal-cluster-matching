@@ -70,6 +70,8 @@ def make_global(dataloader, args, output_fn):
 def main():
     start_time = time.time()
     print("Starting algorithm at %s" % (str(datetime.datetime.now())))
+    with open('log.txt', 'a') as f:
+        f.write("Starting algorithm at %s\n" % (str(datetime.datetime.now())))
 
     ##############################
     # Ensure output directory exists; if a CSV exists already, indicate code to pick up where we left off
@@ -111,6 +113,8 @@ def main():
     manager = RtreeManager(address=('', 50000), authkey=b'')
     server = manager.get_server()
     print('Server started')
+    with open('log.txt', 'a') as f:
+        f.write("Server started\n")
 
     server.serve_forever()
 
@@ -126,7 +130,11 @@ def main():
     if args.buffer is not None and args.buffer > 1:
         print("WARNING: your buffer distance is probably set incorrectly, this should be in units of degrees (at equator, more/less)")
 
+
     nprocs = mp.cpu_count()
+    print(nprocs)
+    with open('log.txt', 'a') as f:
+        f.write(f"# CPUs: {nprocs}\n")
     p = mp.Pool(processes=nprocs, initializer=make_global, initargs=(dataloader, args, output_fn,))
     p.starmap(driver, geoms)
 

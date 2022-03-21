@@ -228,7 +228,7 @@ class NAIPTileIndex:
 
         Returns an array containing [mrf filename, idx filename, lrc filename].
         """
-        manager = RtreeManager(address=('', 50000), authkey='')
+        manager = RtreeManager(address=('', 50000), authkey=b'')
         manager.connect()
 
         point = shapely.geometry.Point(float(lon), float(lat))
