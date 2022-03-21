@@ -8,9 +8,6 @@ import datetime
 import argparse
 import pandas as pd
 import multiprocessing as mp
-from multiprocessing.managers import BaseManager
-from rtree import Rtree
-import rtree
 
 from temporal_cluster_matching import utils_parallel, DataInterface, algorithms
 
@@ -37,9 +34,6 @@ parser.add_argument('--overwrite', action='store_true', default=False, help='Ign
 
 args = parser.parse_args()
 
-
-class RtreeManager(BaseManager):
-    pass
 
 def driver(index, geom):
     data_images, masks, years = dataloader_global.get_data_stack_from_geom(geom, buffer=args_global.buffer)
@@ -90,33 +84,6 @@ def main():
         args.output_dir,
         "results.csv"
     )
-
-    ##############################
-    # Trying out multiprocessing RTree
-    ##############################
-
-    RtreeManager.register('add')
-    RtreeManager.register('intersection')
-
-    class NoisyRtree(Rtree):
-        def add(self, i, bbox):
-            Rtree.add(self, i, bbox)
-
-        def intersection(self, bbox):
-            return Rtree.intersection(self, bbox)
-
-    index = NoisyRtree("tiles/tile_index")
-
-    RtreeManager.register('add', index.add)
-    RtreeManager.register('intersection', index.intersection)
-
-    manager = RtreeManager(address=('', 50000), authkey=b'')
-    server = manager.get_server()
-    print('Server started')
-    with open('log.txt', 'a') as f:
-        f.write("Server started\n")
-
-    server.serve_forever()
 
     ##############################
     # Load geoms / create dataloader
