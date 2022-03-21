@@ -108,7 +108,7 @@ def main():
     RtreeManager.register('add', index.add)
     RtreeManager.register('intersection', index.intersection)
 
-    manager = RtreeManager(address=('', 50000), authkey='')
+    manager = RtreeManager(address=('', 50000), authkey=b'')
     server = manager.get_server()
     print('Server started')
 
