@@ -40,7 +40,7 @@ def get_all_geoms_from_file1(fn, index_done):
         for row in f:
             geom = row['geometry']
             index = row['properties']['index']
-            if int(index) not in index_done:
+            if str(index) not in index_done:
                 geoms.append((index, geom))
     return geoms
 

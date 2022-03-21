@@ -427,7 +427,7 @@ class NAIPDataLoader(AbstractDataLoader):
     def get_data_stack_from_geom_superres(self, i, parcel, buffer, geom_crs="epsg:4326"):
 
         geom = i[1]
-        index = int(i[0])
+        index = str(i[0])
 
         model_path = '../all_buildings/scripts/berkeley/checkpoints/EDSR_x4.pb'
 

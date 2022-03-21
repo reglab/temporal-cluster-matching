@@ -36,7 +36,7 @@ args = parser.parse_args()
 
 
 def driver(index, geom):
-    data_images, masks, years = dataloader_global.get_data_stack_from_geom(geom, False, buffer=args_global.buffer)
+    data_images, masks, years = dataloader_global.get_data_stack_from_geom((index, geom), False, buffer=args_global.buffer)
 
     if args_global.algorithm == "kl":
         divergence_values = algorithms.calculate_change_values(data_images, masks, n_clusters=args_global.num_clusters)
@@ -76,7 +76,7 @@ def main():
         if os.path.exists(os.path.join(args.output_dir, "results.csv")):
             results = pd.read_csv(os.path.join(args.output_dir, "results.csv"))
             index_done = results.iloc[:, 0].tolist()
-            index_done = [int(i) for i in index_done]
+            index_done = [str(i) for i in index_done]
     else:
         os.makedirs(args.output_dir, exist_ok=False)
 
