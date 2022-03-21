@@ -12,24 +12,24 @@ class RtreeManager(BaseManager):
 RtreeManager.register('add')
 RtreeManager.register('intersection')
 
+if __name__ == '__main__':
+    class NoisyRtree(Rtree):
+        def add(self, i, bbox):
+            Rtree.add(self, i, bbox)
 
-class NoisyRtree(Rtree):
-    def add(self, i, bbox):
-        Rtree.add(self, i, bbox)
-
-    def intersection(self, bbox):
-        return Rtree.intersection(self, bbox)
+        def intersection(self, bbox):
+            return Rtree.intersection(self, bbox)
 
 
-index = NoisyRtree("tiles/tile_index")
+    index = NoisyRtree("../tiles/tile_index")
 
-RtreeManager.register('add', index.add)
-RtreeManager.register('intersection', index.intersection)
+    RtreeManager.register('add', index.add)
+    RtreeManager.register('intersection', index.intersection)
 
-manager = RtreeManager(address=('', 50000), authkey=b'')
-server = manager.get_server()
-print('Server started')
-with open('log.txt', 'a') as f:
-    f.write("Server started\n")
+    manager = RtreeManager(address=('', 50000), authkey=b'')
+    server = manager.get_server()
+    print('Server started')
+    with open('log.txt', 'a') as f:
+        f.write("Server started\n")
 
-server.serve_forever()
+    server.serve_forever()
