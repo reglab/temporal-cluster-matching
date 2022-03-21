@@ -117,7 +117,7 @@ def main():
     ##############################
     # Load geoms / create dataloader
     ##############################
-    if not os.path.exists(args.dataset)):
+    if not os.path.exists(args.dataset):
         print("Dataset doesn't exist. It's likely that there just aren't any structures in this county.")
         return
 
