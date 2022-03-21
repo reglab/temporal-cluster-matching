@@ -36,7 +36,7 @@ args = parser.parse_args()
 
 
 def driver(index, geom):
-    data_images, masks, years = dataloader_global.get_data_stack_from_geom(geom, buffer=args_global.buffer)
+    data_images, masks, years = dataloader_global.get_data_stack_from_geom(geom, False, buffer=args_global.buffer)
 
     if args_global.algorithm == "kl":
         divergence_values = algorithms.calculate_change_values(data_images, masks, n_clusters=args_global.num_clusters)
