@@ -23,7 +23,7 @@ from sklearn.metrics import accuracy_score, mean_absolute_error
 
 # sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
-from start_server import RtreeManager
+from . import start_server
 
 NAIP_BLOB_ROOT = 'https://naipblobs.blob.core.windows.net/naip/'
 
@@ -228,7 +228,7 @@ class NAIPTileIndex:
 
         Returns an array containing [mrf filename, idx filename, lrc filename].
         """
-        manager = RtreeManager(address=('', 50000), authkey=b'')
+        manager = start_server.RtreeManager(address=('', 50000), authkey=b'')
         manager.connect()
 
         point = shapely.geometry.Point(float(lon), float(lat))
