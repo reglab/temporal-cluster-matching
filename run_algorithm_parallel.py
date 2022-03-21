@@ -136,6 +136,8 @@ def main():
     with open('log.txt', 'a') as f:
         f.write(f"# CPUs: {nprocs}\n")
     p = mp.Pool(processes=nprocs, initializer=make_global, initargs=(dataloader, args, output_fn,))
+    with open('log.txt', 'a') as f:
+        f.write(f"start\n")
     p.starmap(driver, geoms)
 
     ##############################
