@@ -9,7 +9,7 @@ import argparse
 import pandas as pd
 import multiprocessing as mp
 
-from temporal_cluster_matching import utils_parallel, DataInterface, algorithms
+from temporal_cluster_matching import utils, DataInterface, algorithms
 
 parser = argparse.ArgumentParser(description='Script for running temporal cluster matching')
 parser.add_argument('--dataset', required=True,
@@ -92,7 +92,7 @@ def main():
         print("Dataset doesn't exist. It's likely that there just aren't any structures in this county.")
         return
 
-    geoms = utils_parallel.get_all_geoms_from_file1(args.dataset, index_done)
+    geoms = utils.get_all_geoms_from_file1(args.dataset, index_done)
     dataloader = DataInterface.NAIPDataLoader()
     if args.buffer is not None and args.buffer > 1:
         print("WARNING: your buffer distance is probably set incorrectly, this should be in units of degrees (at equator, more/less)")

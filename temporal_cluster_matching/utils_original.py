@@ -19,7 +19,6 @@ from shapely import wkt
 import shapely.geometry
 
 from sklearn.metrics import accuracy_score, mean_absolute_error
-from . import start_server
 
 NAIP_BLOB_ROOT = 'https://naipblobs.blob.core.windows.net/naip/'
 
@@ -213,7 +212,7 @@ class NAIPTileIndex:
         #     download_url(NAIPTileIndex.index_blob_root + file_path, base_path)
 
         self.base_path = base_path
-        # self.tile_rtree = rtree.index.Index("tiles/tile_index")
+        self.tile_rtree = rtree.index.Index("tiles/tile_index")
         self.tile_index = pickle.load(open("tiles/tiles.p", "rb"))
 
 
@@ -224,11 +223,10 @@ class NAIPTileIndex:
 
         Returns an array containing [mrf filename, idx filename, lrc filename].
         """
-        manager = start_server.RtreeManager(address=('', 50000), authkey=b'')
-        manager.connect()
+
         point = shapely.geometry.Point(float(lon), float(lat))
         try:
-            intersected_indices = list(manager.intersection(point.bounds))
+            intersected_indices = list(self.tile_rtree.intersection(point.bounds))
         except Exception as e:
             print(e)
             print(point)

@@ -26,7 +26,7 @@ import planetary_computer as pc
 import pyproj
 import os
 
-from . import utils_parallel
+from . import utils
 
 # Some tricks to make rasterio faster when using vsicurl -- see https://github.com/pangeo-data/cog-best-practices
 RASTERIO_BEST_PRACTICES = dict(
