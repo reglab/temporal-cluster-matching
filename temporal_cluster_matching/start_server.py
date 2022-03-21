@@ -21,7 +21,7 @@ if __name__ == '__main__':
             return Rtree.intersection(self, bbox)
 
 
-    index = NoisyRtree("../tiles/tile_index")
+    index = NoisyRtree("tiles/tile_index")
 
     RtreeManager.register('add', index.add)
     RtreeManager.register('intersection', index.intersection)
