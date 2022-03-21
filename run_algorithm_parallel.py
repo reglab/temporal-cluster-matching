@@ -8,8 +8,11 @@ import datetime
 import argparse
 import pandas as pd
 import multiprocessing as mp
+from multiprocessing.managers import BaseManager
+from rtree import Rtree
+import rtree
 
-from temporal_cluster_matching import utils, DataInterface, algorithms
+from temporal_cluster_matching import utils_parallel, DataInterface, algorithms
 
 parser = argparse.ArgumentParser(description='Script for running temporal cluster matching')
 parser.add_argument('--dataset', required=True,
@@ -33,6 +36,10 @@ parser.add_argument('--verbose', action="store_true", default=False, help='Enabl
 parser.add_argument('--overwrite', action='store_true', default=False, help='Ignore checking whether the output directory has existing data')
 
 args = parser.parse_args()
+
+
+class RtreeManager(BaseManager):
+    pass
 
 def driver(index, geom):
     data_images, masks, years = dataloader_global.get_data_stack_from_geom(geom, buffer=args_global.buffer)
@@ -83,13 +90,38 @@ def main():
     )
 
     ##############################
+    # Trying out multiprocessing RTree
+    ##############################
+
+    RtreeManager.register('add')
+    RtreeManager.register('intersection')
+
+    class NoisyRtree(Rtree):
+        def add(self, i, bbox):
+            Rtree.add(self, i, bbox)
+
+        def intersection(self, bbox):
+            return Rtree.intersection(self, bbox)
+
+    index = NoisyRtree(rtree.index.Index("tiles/tile_index"))
+
+    RtreeManager.register('add', index.add)
+    RtreeManager.register('intersection', index.intersection)
+
+    manager = RtreeManager(address=('', 50000), authkey='')
+    server = manager.get_server()
+    print('Server started')
+
+    server.serve_forever()
+
+    ##############################
     # Load geoms / create dataloader
     ##############################
-    if not os.path.exists(os.path.join("../FL_splits/", args.dataset)):
+    if not os.path.exists(args.dataset)):
         print("Dataset doesn't exist. It's likely that there just aren't any structures in this county.")
         return
 
-    geoms = utils.get_all_geoms_from_file1(os.path.join("../FL_splits/", args.dataset), index_done)
+    geoms = utils_parallel.get_all_geoms_from_file1(args.dataset, index_done)
     dataloader = DataInterface.NAIPDataLoader()
     if args.buffer is not None and args.buffer > 1:
         print("WARNING: your buffer distance is probably set incorrectly, this should be in units of degrees (at equator, more/less)")

@@ -28,7 +28,7 @@ import pyproj
 import cv2
 import os
 
-from . import utils
+from . import utils_parallel
 
 # Some tricks to make rasterio faster when using vsicurl -- see https://github.com/pangeo-data/cog-best-practices
 RASTERIO_BEST_PRACTICES = dict(
@@ -63,9 +63,9 @@ def get_mask_and_bounding_geoms(geom, parcel_geom, buffer):
 
     # transform mask to 26917 to conform to NAIP in FL
     src = pyproj.CRS('EPSG:4326')
-    # berkeley is 26910
+    # berkeley/san jose is 26910
     #los angeles in 26911
-    dst = pyproj.CRS('EPSG:26911')
+    dst = pyproj.CRS('EPSG:26910')
 
     project = pyproj.Transformer.from_crs(src, dst, always_xy=True).transform
 
@@ -237,7 +237,7 @@ class NAIPDataLoader(AbstractDataLoader):
     def get_data_stack_from_geom(self, i, parcel, buffer, geom_crs="epsg:4326"):
         geom = i[1]
         index = int(i[0])
-        model_path = '../all_buildings/scripts/berkeley/checkpoints/EDSR_x4.pb'
+        # model_path = '../all_buildings/scripts/berkeley/checkpoints/EDSR_x4.pb'
 
         if parcel:
             mask_geom, bounding_geom, superres_geom = get_mask_and_bounding_geoms(geom, i[2], buffer)
@@ -247,103 +247,11 @@ class NAIPDataLoader(AbstractDataLoader):
         years = []
         images = []
         masks = []
-        # for fn in fns:
-        #
-        #     year = int(fn.split("/")[2])
-        #     with rasterio.Env(**RASTERIO_BEST_PRACTICES):
-        #         with rasterio.open(utils.NAIP_BLOB_ROOT + fn) as f:
-        #             try:
-        #                 mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False,
-        #                                                    all_touched=True, filled=False)
-        #             except Exception as e:
-        #                 print(index)
-        #                 print("Mask image not executed, skipping (year: {})".format(year))
-        #                 continue
-        #
-        #             mask_image = np.rollaxis(mask_image, 0, 3)
-        #
-        #             try:
-        #                 full_image, full_transform = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False,
-        #                                                                 pad=False, all_touched=True, filled=False)
-        #             except Exception as e:
-        #                 print(index)
-        #                 print("full image not executed, skipping (year: {})".format(year))
-        #                 continue
-        #
-        #             superres_image_path = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/superres_0.0001/{}_{}.png'.format(
-        #                 index, year)
-        #             if not os.path.exists(superres_image_path):
-        #                 #### THIS CODE SEGMENT PRINTS OUT THE NAIP IMAGERY CENTERED ON THE ADU
-        #                 # full_image_mask = np.ma.masked_where(full_image < 0, full_image)
-        #                 pic = np.transpose(full_image, (1, 2, 0))[:, :, :3]
-        #                 with tf.compat.v1.Session() as persisted_sess:
-        #                     with tf.compat.v1.gfile.FastGFile(model_path, 'rb') as m:
-        #                         graph_def = tf.compat.v1.GraphDef()
-        #                         graph_def.ParseFromString(m.read())
-        #                         persisted_sess.graph.as_default()
-        #                         tf.import_graph_def(graph_def)
-        #
-        #                         output = persisted_sess.graph.get_tensor_by_name('import/NCHW_output:0')
-        #                         prediction = persisted_sess.run(output, {'import/IteratorGetNext:0': [pic]})
-        #                         prediction = prediction[0]
-        #
-        #                 if prediction is not None:
-        #                     out_profile = f.profile.copy()
-        #                     out_aff = rasterio.Affine(full_transform[0] / 4, full_transform[1],
-        #                                               full_transform[2],
-        #                                               full_transform[3], full_transform[4] / 4,
-        #                                               full_transform[5])
-        #
-        #                     out_profile.update({'count': 3, 'height': prediction.shape[1], 'width': prediction.shape[2],
-        #                                         'transform': out_aff})
-        #
-        #                     with rasterio.open(superres_image_path, 'w', **out_profile) as dst:
-        #                         dst.write(prediction)
-        #
-        #             # copying metadata from original raster
-        #             # out_meta = f.meta.copy()
-        #             # # only take the RGB channels, not IR
-        #             # out_meta['count'] = 3
-        #             #
-        #             # # amending original metadata
-        #             # out_meta.update({'height': full_image.shape[1],
-        #             #                  'width': full_image.shape[2],
-        #             #                  'transform': full_transform})
-        #             #
-        #             # # print_dir = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/2018_investigate/'
-        #             # print_dir = '../los_angeles_naip'
-        #             # with rasterio.open(
-        #             #         f'../los_angeles_naip/{buffer}/{index}_{year}.png',
-        #             #         'w', **out_meta) as dst:
-        #             #     dst.write(full_image_mask[:3,:,:])
-        #             ### END PRINT
-        #
-        #             full_image = np.rollaxis(full_image, 0, 3)
-        #
-        #             mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)
-        #             mask[np.sum(mask_image == 0, axis=2) == 4] = 1
-        #
-        #     images.append(full_image)
-        #     masks.append(mask)
-        #     years.append(year)
-
-        ## CODE TO ADD 2020 NAIP imagery for Berkeley
-        # Open pickle file to see which file to open
-
-        path_to_fn = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/2020/'
-        with open(path_to_fn + 'bounds.p', 'rb') as handle:
-            tif_bounds = pickle.load(handle)
-
-        fns = []  # this should be a list of just one--do this because we have a continue in the exception
-        for fn, bounds in tif_bounds.items():
-            if bounds.contains(shapely.geometry.shape(geom).centroid):
-                fns.append(fn)
-
         for fn in fns:
-            year = 2020
 
+            year = int(fn.split("/")[2])
             with rasterio.Env(**RASTERIO_BEST_PRACTICES):
-                with rasterio.open(path_to_fn + fn) as f:
+                with rasterio.open(utils.NAIP_BLOB_ROOT + fn) as f:
                     try:
                         mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False,
                                                            all_touched=True, filled=False)
@@ -356,45 +264,43 @@ class NAIPDataLoader(AbstractDataLoader):
 
                     try:
                         full_image, full_transform = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False,
-                                                                        pad=False,
-                                                                        all_touched=True, filled=False)
+                                                                        pad=False, all_touched=True, filled=False)
                     except Exception as e:
                         print(index)
                         print("full image not executed, skipping (year: {})".format(year))
                         continue
 
-                    superres_image_path = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/superres_0.0001/{}_{}.png'.format(
-                        index, year)
-                    if not os.path.exists(superres_image_path):
+                    # superres_image_path = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/superres_0.0001/{}_{}.png'.format(
+                    #     index, year)
+                    # if not os.path.exists(superres_image_path):
+                    #     #### THIS CODE SEGMENT PRINTS OUT THE NAIP IMAGERY CENTERED ON THE ADU
+                    #     # full_image_mask = np.ma.masked_where(full_image < 0, full_image)
+                    #     pic = np.transpose(full_image, (1, 2, 0))[:, :, :3]
+                    #     with tf.compat.v1.Session() as persisted_sess:
+                    #         with tf.compat.v1.gfile.FastGFile(model_path, 'rb') as m:
+                    #             graph_def = tf.compat.v1.GraphDef()
+                    #             graph_def.ParseFromString(m.read())
+                    #             persisted_sess.graph.as_default()
+                    #             tf.import_graph_def(graph_def)
+                    #
+                    #             output = persisted_sess.graph.get_tensor_by_name('import/NCHW_output:0')
+                    #             prediction = persisted_sess.run(output, {'import/IteratorGetNext:0': [pic]})
+                    #             prediction = prediction[0]
+                    #
+                    #     if prediction is not None:
+                    #         out_profile = f.profile.copy()
+                    #         out_aff = rasterio.Affine(full_transform[0] / 4, full_transform[1],
+                    #                                   full_transform[2],
+                    #                                   full_transform[3], full_transform[4] / 4,
+                    #                                   full_transform[5])
+                    #
+                    #         out_profile.update({'count': 3, 'height': prediction.shape[1], 'width': prediction.shape[2],
+                    #                             'transform': out_aff})
+                    #
+                    #         with rasterio.open(superres_image_path, 'w', **out_profile) as dst:
+                    #             dst.write(prediction)
 
-                        pic = np.transpose(full_image, (1, 2, 0))[:, :, :3]
-                        with tf.compat.v1.Session() as persisted_sess:
-                            with tf.compat.v1.gfile.FastGFile(model_path, 'rb') as m:
-                                graph_def = tf.compat.v1.GraphDef()
-                                graph_def.ParseFromString(m.read())
-                                persisted_sess.graph.as_default()
-                                tf.import_graph_def(graph_def)
-
-                                output = persisted_sess.graph.get_tensor_by_name('import/NCHW_output:0')
-                                prediction = persisted_sess.run(output, {'import/IteratorGetNext:0': [pic]})
-                                prediction = prediction[0]
-
-                        if prediction is not None:
-                            out_profile = f.profile.copy()
-                            out_aff = rasterio.Affine(full_transform[0] / 4, full_transform[1],
-                                                      full_transform[2],
-                                                      full_transform[3], full_transform[4] / 4,
-                                                      full_transform[5])
-
-                            out_profile.update({'count': 3, 'height': prediction.shape[1], 'width': prediction.shape[2],
-                                                'transform': out_aff})
-
-                            with rasterio.open(superres_image_path, 'w', **out_profile) as dst:
-                                dst.write(prediction)
-
-                    #### THIS CODE SEGMENT PRINTS OUT THE NAIP IMAGERY CENTERED ON THE ADU
-                    # full_image_mask = np.ma.masked_where(full_image < 0, full_image)
-                    # # copying metadata from original raster
+                    # copying metadata from original raster
                     # out_meta = f.meta.copy()
                     # # only take the RGB channels, not IR
                     # out_meta['count'] = 3
@@ -409,17 +315,111 @@ class NAIPDataLoader(AbstractDataLoader):
                     # with rasterio.open(
                     #         f'../los_angeles_naip/{buffer}/{index}_{year}.png',
                     #         'w', **out_meta) as dst:
-                    #     dst.write(full_image_mask[:3, :, :])
+                    #     dst.write(full_image_mask[:3,:,:])
                     ### END PRINT
 
                     full_image = np.rollaxis(full_image, 0, 3)
+
                     mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)
                     mask[np.sum(mask_image == 0, axis=2) == 4] = 1
 
             images.append(full_image)
             masks.append(mask)
             years.append(year)
-            break
+
+        ## CODE TO ADD 2020 NAIP imagery for Berkeley
+        # Open pickle file to see which file to open
+
+        # path_to_fn = '/oak/stanford/groups/deho/building_compliance/san_jose_naip/2020/'
+        # with open(path_to_fn + 'bounds.p', 'rb') as handle:
+        #     tif_bounds = pickle.load(handle)
+        #
+        # fns = []  # this should be a list of just one--do this because we have a continue in the exception
+        # for fn, bounds in tif_bounds.items():
+        #     if bounds.contains(shapely.geometry.shape(geom).centroid):
+        #         fns.append(fn)
+
+        # for fn in fns:
+        #     year = 2020
+        #
+        #     with rasterio.Env(**RASTERIO_BEST_PRACTICES):
+        #         with rasterio.open(path_to_fn + fn) as f:
+        #             try:
+        #                 mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False,
+        #                                                    all_touched=True, filled=False)
+        #             except Exception as e:
+        #                 print(index)
+        #                 print("Mask image not executed, skipping (year: {})".format(year))
+        #                 continue
+        #
+        #             mask_image = np.rollaxis(mask_image, 0, 3)
+        #
+        #             try:
+        #                 full_image, full_transform = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False,
+        #                                                                 pad=False,
+        #                                                                 all_touched=True, filled=False)
+        #             except Exception as e:
+        #                 print(index)
+        #                 print("full image not executed, skipping (year: {})".format(year))
+        #                 continue
+        #
+        #             # superres_image_path = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/superres_0.0001/{}_{}.png'.format(
+        #             #     index, year)
+        #             # if not os.path.exists(superres_image_path):
+        #             #
+        #             #     pic = np.transpose(full_image, (1, 2, 0))[:, :, :3]
+        #             #     with tf.compat.v1.Session() as persisted_sess:
+        #             #         with tf.compat.v1.gfile.FastGFile(model_path, 'rb') as m:
+        #             #             graph_def = tf.compat.v1.GraphDef()
+        #             #             graph_def.ParseFromString(m.read())
+        #             #             persisted_sess.graph.as_default()
+        #             #             tf.import_graph_def(graph_def)
+        #             #
+        #             #             output = persisted_sess.graph.get_tensor_by_name('import/NCHW_output:0')
+        #             #             prediction = persisted_sess.run(output, {'import/IteratorGetNext:0': [pic]})
+        #             #             prediction = prediction[0]
+        #             #
+        #             #     if prediction is not None:
+        #             #         out_profile = f.profile.copy()
+        #             #         out_aff = rasterio.Affine(full_transform[0] / 4, full_transform[1],
+        #             #                                   full_transform[2],
+        #             #                                   full_transform[3], full_transform[4] / 4,
+        #             #                                   full_transform[5])
+        #             #
+        #             #         out_profile.update({'count': 3, 'height': prediction.shape[1], 'width': prediction.shape[2],
+        #             #                             'transform': out_aff})
+        #             #
+        #             #         with rasterio.open(superres_image_path, 'w', **out_profile) as dst:
+        #             #             dst.write(prediction)
+        #
+        #             #### THIS CODE SEGMENT PRINTS OUT THE NAIP IMAGERY CENTERED ON THE ADU
+        #             # full_image_mask = np.ma.masked_where(full_image < 0, full_image)
+        #             # # copying metadata from original raster
+        #             # out_meta = f.meta.copy()
+        #             # # only take the RGB channels, not IR
+        #             # out_meta['count'] = 3
+        #             #
+        #             # # amending original metadata
+        #             # out_meta.update({'height': full_image.shape[1],
+        #             #                  'width': full_image.shape[2],
+        #             #                  'transform': full_transform})
+        #             #
+        #             # # print_dir = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/2018_investigate/'
+        #             # print_dir = '../los_angeles_naip'
+        #             # with rasterio.open(
+        #             #         f'../los_angeles_naip/{buffer}/{index}_{year}.png',
+        #             #         'w', **out_meta) as dst:
+        #             #     dst.write(full_image_mask[:3, :, :])
+        #             ### END PRINT
+        #
+        #             full_image = np.rollaxis(full_image, 0, 3)
+        #             mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)
+        #             mask[np.sum(mask_image == 0, axis=2) == 4] = 1
+        #
+        #     images.append(full_image)
+        #     masks.append(mask)
+        #     years.append(year)
+        #     break
 
         return images, masks, years
 
