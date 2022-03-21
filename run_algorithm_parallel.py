@@ -103,7 +103,7 @@ def main():
         def intersection(self, bbox):
             return Rtree.intersection(self, bbox)
 
-    index = NoisyRtree(rtree.index.Index("tiles/tile_index"))
+    index = NoisyRtree("tiles/tile_index")
 
     RtreeManager.register('add', index.add)
     RtreeManager.register('intersection', index.intersection)
