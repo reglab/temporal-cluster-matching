@@ -19,7 +19,6 @@ from shapely import wkt
 import shapely.geometry
 
 from sklearn.metrics import accuracy_score, mean_absolute_error
-from .. import pyrtree
 
 NAIP_BLOB_ROOT = 'https://naipblobs.blob.core.windows.net/naip/'
 
