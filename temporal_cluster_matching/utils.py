@@ -19,7 +19,7 @@ from shapely import wkt
 import shapely.geometry
 
 from sklearn.metrics import accuracy_score, mean_absolute_error
-from . import start_server
+from .. import pyrtree
 
 NAIP_BLOB_ROOT = 'https://naipblobs.blob.core.windows.net/naip/'
 
@@ -217,15 +217,13 @@ class NAIPTileIndex:
         self.tile_index = pickle.load(open("tiles/tiles.p", "rb"))
 
 
-    def lookup_tile(self, lat, lon):
+    def lookup_tile(self, lat, lon, manager):
         """"
         Given a lat/lon coordinate pair, return the list of NAIP tiles that contain
         that location.
 
         Returns an array containing [mrf filename, idx filename, lrc filename].
         """
-        manager = start_server.RtreeManager(address=('', 50000), authkey=b'')
-        manager.connect()
         point = shapely.geometry.Point(float(lon), float(lat))
         try:
             intersected_indices = list(manager.intersection(point.bounds))

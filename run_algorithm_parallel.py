@@ -35,8 +35,8 @@ parser.add_argument('--overwrite', action='store_true', default=False, help='Ign
 args = parser.parse_args()
 
 
-def driver(index, geom):
-    data_images, masks, years = dataloader_global.get_data_stack_from_geom((index, geom), False, buffer=args_global.buffer)
+def driver(index, geom, manager):
+    data_images, masks, years = dataloader_global.get_data_stack_from_geom((index, geom), False, args_global.buffer, manager)
 
     if args_global.algorithm == "kl":
         divergence_values = algorithms.calculate_change_values(data_images, masks, n_clusters=args_global.num_clusters)
@@ -97,15 +97,16 @@ def main():
     if args.buffer is not None and args.buffer > 1:
         print("WARNING: your buffer distance is probably set incorrectly, this should be in units of degrees (at equator, more/less)")
 
+    manager = start_server.RtreeManager(address=('', 50000), authkey=b'')
+    manager.connect()
 
     nprocs = mp.cpu_count()
     print(nprocs)
     with open('log.txt', 'a') as f:
         f.write(f"# CPUs: {nprocs}\n")
     p = mp.Pool(processes=nprocs, initializer=make_global, initargs=(dataloader, args, output_fn,))
-    with open('log.txt', 'a') as f:
-        f.write(f"start\n")
-    p.starmap(driver, geoms)
+
+    p.starmap(driver, geoms, manager)
 
     ##############################
     # Loop through geoms and run

@@ -145,10 +145,10 @@ class NAIPDataLoader(AbstractDataLoader):
     def __init__(self):
         self.index = utils.NAIPTileIndex()
 
-    def _get_fns_from_geom(self, geom, src_crs):
+    def _get_fns_from_geom(self, geom, src_crs, manager):
 
         centroid = utils.get_transformed_centroid_from_geom(geom, src_crs=src_crs, dst_crs='epsg:4326')
-        fns = self.index.lookup_tile(*centroid)
+        fns = self.index.lookup_tile(*centroid, manager=manager)
         fns = sorted(fns)
 
         base_state = fns[0].split("/")[1]
@@ -232,18 +232,17 @@ class NAIPDataLoader(AbstractDataLoader):
 
         return images, years
 
-    def get_data_stack_from_geom(self, i, parcel, buffer, geom_crs="epsg:4326"):
+    def get_data_stack_from_geom(self, i, parcel, buffer, manager, geom_crs="epsg:4326"):
         geom = i[1]
-        index = int(i[0])
-        with open('log.txt', 'a') as f:
-            f.write(f'{index}\n')
+        index = str(i[0])
+
         # model_path = '../all_buildings/scripts/berkeley/checkpoints/EDSR_x4.pb'
 
         if parcel:
             mask_geom, bounding_geom, superres_geom = get_mask_and_bounding_geoms(geom, i[2], buffer)
         else:
             mask_geom, bounding_geom, superres_geom = get_mask_and_bounding_geoms(geom, None, buffer)
-        fns = self._get_fns_from_geom(geom, geom_crs)
+        fns = self._get_fns_from_geom(geom, geom_crs, manager)
         years = []
         images = []
         masks = []
