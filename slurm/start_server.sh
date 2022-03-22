@@ -9,4 +9,4 @@
 
 cd ../
 
-singularity exec $GROUP_HOME/singularity/cafo_permit+tcm_10-21-21.sif python temporal_cluster_matching/start_server.py
+singularity exec $GROUP_HOME/singularity/cafo_permit+tcm_10-21-21.sif python start_server.py
