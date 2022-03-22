@@ -8,8 +8,7 @@ import datetime
 import argparse
 import pandas as pd
 import multiprocessing as mp
-
-from . import start_server
+import start_server
 from temporal_cluster_matching import utils, DataInterface, algorithms
 
 parser = argparse.ArgumentParser(description='Script for running temporal cluster matching')
