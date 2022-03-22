@@ -23,7 +23,7 @@ from sklearn.metrics import accuracy_score, mean_absolute_error
 
 # sys.path.insert(1, os.path.join(sys.path[0], '..'))
 
-from . import start_server
+import start_server
 
 NAIP_BLOB_ROOT = 'https://naipblobs.blob.core.windows.net/naip/'
 
