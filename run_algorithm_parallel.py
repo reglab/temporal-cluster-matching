@@ -10,6 +10,7 @@ import pandas as pd
 import multiprocessing as mp
 import start_server
 from temporal_cluster_matching import utils, DataInterface, algorithms
+import rtree
 
 parser = argparse.ArgumentParser(description='Script for running temporal cluster matching')
 parser.add_argument('--dataset', required=True,
@@ -36,7 +37,7 @@ args = parser.parse_args()
 
 
 def driver(index, geom, manager):
-    data_images, masks, years = dataloader_global.get_data_stack_from_geom((index, geom), False, args_global.buffer, manager)
+    data_images, masks, years = dataloader_global.get_data_stack_from_geom((index, geom), False, args_global.buffer, manager_global)
 
     if args_global.algorithm == "kl":
         divergence_values = algorithms.calculate_change_values(data_images, masks, n_clusters=args_global.num_clusters)
@@ -52,14 +53,16 @@ def driver(index, geom, manager):
             f.write("%0.4f," % (divergence))
         f.write("\n")
 
-def make_global(dataloader, args, output_fn):
+def make_global(dataloader, args, output_fn, manager):
     global dataloader_global
     global args_global
     global output_fn_global
+    global manager_global
 
     dataloader_global = dataloader
     args_global = args
     output_fn_global = output_fn
+    manager_global = manager
 
 def main():
     start_time = time.time()
@@ -97,16 +100,18 @@ def main():
     if args.buffer is not None and args.buffer > 1:
         print("WARNING: your buffer distance is probably set incorrectly, this should be in units of degrees (at equator, more/less)")
 
-    manager = start_server.RtreeManager(address=('', 50000), authkey=b'')
-    manager.connect()
+    # manager = start_server.RtreeManager(address=('', 50000), authkey=b'')
+    # manager.connect()
+
+    manager = rtree.index.Index('tiles/tile_index')
 
     nprocs = mp.cpu_count()
     print(nprocs)
     with open('log.txt', 'a') as f:
         f.write(f"# CPUs: {nprocs}\n")
-    p = mp.Pool(processes=nprocs, initializer=make_global, initargs=(dataloader, args, output_fn,))
+    p = mp.Pool(processes=nprocs, initializer=make_global, initargs=(dataloader, args, output_fn, manager,))
 
-    p.starmap(driver, geoms, manager)
+    p.starmap(driver, geoms)
 
     ##############################
     # Loop through geoms and run
