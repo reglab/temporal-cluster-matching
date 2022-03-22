@@ -36,7 +36,7 @@ parser.add_argument('--overwrite', action='store_true', default=False, help='Ign
 args = parser.parse_args()
 
 
-def driver(index, geom, manager):
+def driver(index, geom):
     data_images, masks, years = dataloader_global.get_data_stack_from_geom((index, geom), False, args_global.buffer, manager_global)
 
     if args_global.algorithm == "kl":
