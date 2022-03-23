@@ -3,7 +3,7 @@ import start_server
 import time
 import datetime
 import multiprocessing as mp
-from temporal_cluster_matching import utils, DataInterface
+# from temporal_cluster_matching import utils, DataInterface
 start_time = time.time()
 print("Starting algorithm at %s" % (str(datetime.datetime.now())))
 
@@ -32,8 +32,8 @@ print("Starting algorithm at %s" % (str(datetime.datetime.now())))
 #     print("Dataset doesn't exist. It's likely that there just aren't any structures in this county.")
 #     return
 
-geoms = utils.get_all_geoms_from_file1('../all_buildings/data/input/OSM/san_jose_test.geojson', [])
-dataloader = DataInterface.NAIPDataLoader()
+# geoms = utils.get_all_geoms_from_file1('../all_buildings/data/input/OSM/san_jose_test.geojson', [])
+# dataloader = DataInterface.NAIPDataLoader()
 
 manager = start_server.RtreeManager(address=('', 50000), authkey=b'')
 manager.connect()
