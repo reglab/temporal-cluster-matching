@@ -71,6 +71,9 @@ def calculate_change_values(index, years, images, masks, n_clusters, num_samples
         # select the cluster labels that fall within the parcel and those outside of the parcel
         parcel_labels = labels[mask]
         neighborhood_labels = labels[~mask]
+        print(labels.shape)
+        print(parcel_labels.shape)
+        print(neighborhood_labels.shape)
 
         # compute the frequency with which each cluster occurs in the parcel and outside of the parcel
         parcel_counts = np.bincount(parcel_labels.ravel(), minlength=n_clusters)
