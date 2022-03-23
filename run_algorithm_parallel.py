@@ -8,7 +8,6 @@ import datetime
 import argparse
 import pandas as pd
 import multiprocessing as mp
-import start_server
 from temporal_cluster_matching import utils, DataInterface, algorithms
 
 parser = argparse.ArgumentParser(description='Script for running temporal cluster matching')
@@ -36,7 +35,7 @@ args = parser.parse_args()
 
 
 def driver(index, geom):
-    data_images, masks, years = dataloader_global.get_data_stack_from_geom((index, geom), False, args_global.buffer, manager_global)
+    data_images, masks, years = dataloader_global.get_data_stack_from_geom((index, geom), False, args_global.buffer)
 
     if args_global.algorithm == "kl":
         divergence_values = algorithms.calculate_change_values(data_images, masks, n_clusters=args_global.num_clusters)
@@ -52,16 +51,14 @@ def driver(index, geom):
             f.write("%0.4f," % (divergence))
         f.write("\n")
 
-def make_global(dataloader, args, output_fn, manager):
+def make_global(dataloader, args, output_fn):
     global dataloader_global
     global args_global
     global output_fn_global
-    global manager_global
 
     dataloader_global = dataloader
     args_global = args
     output_fn_global = output_fn
-    manager_global = manager
 
 def main():
     start_time = time.time()
@@ -97,15 +94,15 @@ def main():
     if args.buffer is not None and args.buffer > 1:
         print("WARNING: your buffer distance is probably set incorrectly, this should be in units of degrees (at equator, more/less)")
 
-    manager = start_server.RtreeManager(address=('localhost', 50000), authkey=b'')
-    manager.connect()
+    # manager = start_server.RtreeManager(address=('localhost', 50000), authkey=b'')
+    # manager.connect()
 
     # manager = rtree.index.Index('tiles/tile_index')
 
     nprocs = mp.cpu_count()
     print(nprocs)
 
-    p = mp.Pool(processes=nprocs, initializer=make_global, initargs=(dataloader, args, output_fn, manager,))
+    p = mp.Pool(processes=nprocs, initializer=make_global, initargs=(dataloader, args, output_fn,))
 
     p.starmap(driver, geoms)
 
