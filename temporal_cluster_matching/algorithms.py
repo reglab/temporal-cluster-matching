@@ -24,6 +24,9 @@ def calculate_change_values(index, years, images, masks, n_clusters, num_samples
         divergences: A list of KL-divergence values
     '''
     divergences = []
+    print(len(images))
+    print(len(masks))
+    print(len(years))
     for image, mask, year in zip(images, masks, years):
         if mask.shape[0] > image.shape[0]:
             mask = mask[:image.shape[0], :]

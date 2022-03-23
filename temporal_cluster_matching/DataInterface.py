@@ -340,9 +340,8 @@ class NAIPDataLoader(AbstractDataLoader):
             for fn, bounds in tif_bounds.items():
                 if bounds.contains(shapely.geometry.shape(geom).centroid):
                     fns.append(fn)
-
+            print(f'{year}: {fns}')
             for fn in fns:
-
                 with rasterio.Env(**RASTERIO_BEST_PRACTICES):
                     with rasterio.open(path_to_fn + fn) as f:
                         try:
