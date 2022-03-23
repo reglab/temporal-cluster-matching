@@ -35,7 +35,7 @@ print("Starting algorithm at %s" % (str(datetime.datetime.now())))
 # geoms = utils.get_all_geoms_from_file1('../all_buildings/data/input/OSM/san_jose_test.geojson', [])
 # dataloader = DataInterface.NAIPDataLoader()
 
-manager = start_server.RtreeManager(address=('', 50000), authkey=b'')
+manager = start_server.RtreeManager(address=('localhost', 50000), authkey=b'')
 manager.connect()
 
 # manager = rtree.index.Index('tiles/tile_index')
