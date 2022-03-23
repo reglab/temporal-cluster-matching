@@ -38,7 +38,8 @@ def driver(index, geom):
     data_images, masks, years = dataloader_global.get_data_stack_from_geom((index, geom), False, args_global.buffer)
 
     if args_global.algorithm == "kl":
-        divergence_values = algorithms.calculate_change_values(data_images, masks, n_clusters=args_global.num_clusters)
+        divergence_values = algorithms.calculate_change_values(index, years,
+                                                               data_images, masks, n_clusters=args_global.num_clusters)
     elif args_global.algorithm == "color":
         divergence_values = algorithms.calculate_change_values_with_color(data_images, masks)
 
