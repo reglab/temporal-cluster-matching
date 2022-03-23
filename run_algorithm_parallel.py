@@ -67,8 +67,6 @@ def make_global(dataloader, args, output_fn, manager):
 def main():
     start_time = time.time()
     print("Starting algorithm at %s" % (str(datetime.datetime.now())))
-    with open('log.txt', 'a') as f:
-        f.write("Starting algorithm at %s\n" % (str(datetime.datetime.now())))
 
     ##############################
     # Ensure output directory exists; if a CSV exists already, indicate code to pick up where we left off
@@ -107,8 +105,7 @@ def main():
 
     nprocs = mp.cpu_count()
     print(nprocs)
-    with open('log.txt', 'a') as f:
-        f.write(f"# CPUs: {nprocs}\n")
+
     p = mp.Pool(processes=nprocs, initializer=make_global, initargs=(dataloader, args, output_fn, manager,))
 
     p.starmap(driver, geoms)
