@@ -1,35 +1,32 @@
 from multiprocessing.managers import BaseManager
-from rtree import Rtree
-import rtree
 
 class RtreeManager(BaseManager):
     pass
-
-##############################
-# Trying out multiprocessing RTree
-##############################
 
 RtreeManager.register('add')
 RtreeManager.register('intersection')
 
 if __name__ == '__main__':
-    class NoisyRtree(Rtree):
+
+    from rtree.index import Rtree
+
+
+    class NoisyRtree():
+        def __init__(self, rtree):
+            self.rtree = rtree
+
         def add(self, i, bbox):
-            Rtree.add(self, i, bbox)
+            self.rtree.add(i, bbox)
 
         def intersection(self, bbox):
-            return Rtree.intersection(self, bbox)
+            return list(self.rtree.intersection(bbox))
 
-
-    index = NoisyRtree("tiles/tile_index")
+    index = NoisyRtree(Rtree('tiles/tile_index'))
 
     RtreeManager.register('add', index.add)
     RtreeManager.register('intersection', index.intersection)
 
     manager = RtreeManager(address=('', 50000), authkey=b'')
     server = manager.get_server()
-    print('Server started')
-    with open('log.txt', 'a') as f:
-        f.write("Server started\n")
-
+    print("Server started")
     server.serve_forever()

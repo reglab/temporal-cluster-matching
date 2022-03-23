@@ -100,10 +100,10 @@ def main():
     if args.buffer is not None and args.buffer > 1:
         print("WARNING: your buffer distance is probably set incorrectly, this should be in units of degrees (at equator, more/less)")
 
-    # manager = start_server.RtreeManager(address=('', 50000), authkey=b'')
-    # manager.connect()
+    manager = start_server.RtreeManager(address=('', 50000), authkey=b'')
+    manager.connect()
 
-    manager = rtree.index.Index('tiles/tile_index')
+    # manager = rtree.index.Index('tiles/tile_index')
 
     nprocs = mp.cpu_count()
     print(nprocs)
