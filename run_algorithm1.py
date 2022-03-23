@@ -52,7 +52,7 @@ def main():
     if os.path.exists(args.output_dir):
         # see if csv exists within directory
         if os.path.exists(os.path.join(args.output_dir, "results.csv")):
-            results = pd.read_csv(os.path.join(args.output_dir, "results.csv"))
+            results = pd.read_csv(os.path.join(args.output_dir, "results.csv"), header=None)
             if args.parcel_type == 'parcel_dedup':
                 index_done = results.iloc[:, 0].tolist()
                 index_done = [i for i in index_done]

@@ -72,11 +72,9 @@ def main():
     if os.path.exists(args.output_dir):
         # see if csv exists within directory
         if os.path.exists(os.path.join(args.output_dir, "results.csv")):
-            results = pd.read_csv(os.path.join(args.output_dir, "results.csv"))
-            print(results)
+            results = pd.read_csv(os.path.join(args.output_dir, "results.csv"), header=None)
             index_done = results.iloc[:, 0].tolist()
             index_done = [str(i) for i in index_done]
-            print(index_done)
     else:
         os.makedirs(args.output_dir, exist_ok=False)
 
