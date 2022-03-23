@@ -26,7 +26,7 @@ if __name__ == '__main__':
     RtreeManager.register('add', index.add)
     RtreeManager.register('intersection', index.intersection)
 
-    manager = RtreeManager(address=('', 50000), authkey=b'')
+    manager = RtreeManager(address=('localhost', 50000), authkey=b'')
     server = manager.get_server()
     print("Server started")
     server.serve_forever()
