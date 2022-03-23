@@ -10,7 +10,6 @@ import pandas as pd
 import multiprocessing as mp
 import start_server
 from temporal_cluster_matching import utils, DataInterface, algorithms
-import rtree
 
 parser = argparse.ArgumentParser(description='Script for running temporal cluster matching')
 parser.add_argument('--dataset', required=True,
