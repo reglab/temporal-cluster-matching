@@ -44,7 +44,7 @@ def driver(index, geom):
         divergence_values = algorithms.calculate_change_values_with_color(data_images, masks)
 
     with open(output_fn_global, "a") as f:
-        f.write("%d," % (index))
+        f.write(f"{index},")
         for year in years:
             f.write("%d," % (year))
         f.write("|,")
