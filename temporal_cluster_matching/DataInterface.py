@@ -242,6 +242,12 @@ class NAIPDataLoader(AbstractDataLoader):
             mask_geom, bounding_geom, superres_geom = get_mask_and_bounding_geoms(geom, i[2], buffer)
         else:
             mask_geom, bounding_geom, superres_geom = get_mask_and_bounding_geoms(geom, None, buffer)
+
+        with open(f'{index}_mask_geom.p', 'wb') as g:
+            pickle.dump(mask_geom, g)
+
+        with open(f'{index}_bounding_geom.p', 'wb') as g:
+            pickle.dump(bounding_geom, g)
         # fns = self._get_fns_from_geom(geom, geom_crs)
         years = []
         images = []
@@ -416,8 +422,8 @@ class NAIPDataLoader(AbstractDataLoader):
                             pickle.dump(mask_image, g)
                         full_image = np.rollaxis(full_image, 0, 3)
                         print(full_image)
-                        with open(f'{index}_full.p', 'wb') as g:
-                            pickle.dump(full_image, g)
+                        with open(f'{index}_full.p', 'wb') as h:
+                            pickle.dump(full_image, h)
 
                         mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)
                         mask[np.sum(mask_image == 0, axis=2) == 4] = 1
