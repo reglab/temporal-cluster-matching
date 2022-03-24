@@ -411,10 +411,11 @@ class NAIPDataLoader(AbstractDataLoader):
                         #         'w', **out_meta) as dst:
                         #     dst.write(full_image_mask[:3, :, :])
                         ### END PRINT
-                        print(mask_image.shape)
+                        print(mask_image)
                         with open(f'{index}.p', 'wb') as g:
                             pickle.dump(mask_image, g)
                         full_image = np.rollaxis(full_image, 0, 3)
+                        print(full_image)
                         with open(f'{index}_full.p', 'wb') as g:
                             pickle.dump(full_image, g)
 
