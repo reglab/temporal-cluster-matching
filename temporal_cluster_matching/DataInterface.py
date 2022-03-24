@@ -243,11 +243,6 @@ class NAIPDataLoader(AbstractDataLoader):
         else:
             mask_geom, bounding_geom, superres_geom = get_mask_and_bounding_geoms(geom, None, buffer)
 
-        with open(f'{index}_mask_geom.p', 'wb') as g:
-            pickle.dump(mask_geom, g)
-
-        with open(f'{index}_bounding_geom.p', 'wb') as g:
-            pickle.dump(bounding_geom, g)
         # fns = self._get_fns_from_geom(geom, geom_crs)
         years = []
         images = []
@@ -352,7 +347,7 @@ class NAIPDataLoader(AbstractDataLoader):
                     with rasterio.open(path_to_fn + fn) as f:
                         try:
                             mask_image, _ = rasterio.mask.mask(f, [mask_geom], crop=True, invert=False, pad=False,
-                                                               all_touched=True, filled=False)
+                                                               all_touched=True)
                         except Exception as e:
                             print(index)
                             print("Mask image not executed, skipping (year: {})".format(year))
@@ -363,7 +358,7 @@ class NAIPDataLoader(AbstractDataLoader):
                         try:
                             full_image, full_transform = rasterio.mask.mask(f, [bounding_geom], crop=True, invert=False,
                                                                             pad=False,
-                                                                            all_touched=True, filled=False)
+                                                                            all_touched=True)
                         except Exception as e:
                             print(index)
                             print("full image not executed, skipping (year: {})".format(year))
