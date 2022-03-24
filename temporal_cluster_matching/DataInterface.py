@@ -411,10 +411,11 @@ class NAIPDataLoader(AbstractDataLoader):
                         #         'w', **out_meta) as dst:
                         #     dst.write(full_image_mask[:3, :, :])
                         ### END PRINT
-
+                        print(mask_image.shape)
                         full_image = np.rollaxis(full_image, 0, 3)
                         mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)
                         mask[np.sum(mask_image == 0, axis=2) == 4] = 1
+                        print(np.sum(mask))
 
                 images.append(full_image)
                 masks.append(mask)
