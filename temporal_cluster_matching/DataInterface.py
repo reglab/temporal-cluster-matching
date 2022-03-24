@@ -416,7 +416,7 @@ class NAIPDataLoader(AbstractDataLoader):
                             pickle.dump(mask_image, g)
                         full_image = np.rollaxis(full_image, 0, 3)
                         with open(f'{index}_full.p', 'wb') as g:
-                            pickle.dump(mask_image, g)
+                            pickle.dump(full_image, g)
 
                         mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)
                         mask[np.sum(mask_image == 0, axis=2) == 4] = 1
