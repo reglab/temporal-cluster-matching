@@ -394,23 +394,23 @@ class NAIPDataLoader(AbstractDataLoader):
                         #             dst.write(prediction)
 
                         #### THIS CODE SEGMENT PRINTS OUT THE NAIP IMAGERY CENTERED ON THE ADU
-                        # full_image_mask = np.ma.masked_where(full_image < 0, full_image)
-                        # # copying metadata from original raster
-                        # out_meta = f.meta.copy()
-                        # # only take the RGB channels, not IR
-                        # out_meta['count'] = 3
-                        #
-                        # # amending original metadata
-                        # out_meta.update({'height': full_image.shape[1],
-                        #                  'width': full_image.shape[2],
-                        #                  'transform': full_transform})
-                        #
-                        # # print_dir = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/2018_investigate/'
-                        # print_dir = '../sj_naip'
-                        # with rasterio.open(
-                        #         f'../sj_naip/{buffer}/{index}_{year}.png',
-                        #         'w', **out_meta) as dst:
-                        #     dst.write(full_image_mask[:3, :, :])
+                        full_image_mask = np.ma.masked_where(full_image < 0, full_image)
+                        # copying metadata from original raster
+                        out_meta = f.meta.copy()
+                        # only take the RGB channels, not IR
+                        out_meta['count'] = 3
+
+                        # amending original metadata
+                        out_meta.update({'height': full_image.shape[1],
+                                         'width': full_image.shape[2],
+                                         'transform': full_transform})
+
+                        # print_dir = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/2018_investigate/'
+                        print_dir = '../sj_naip'
+                        with rasterio.open(
+                                f'../sj_naip/{buffer}/{index}_{year}.png',
+                                'w', **out_meta) as dst:
+                            dst.write(full_image_mask[:3, :, :])
                         ### END PRINT
 
 
