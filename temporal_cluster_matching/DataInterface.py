@@ -364,6 +364,8 @@ class NAIPDataLoader(AbstractDataLoader):
                             print("full image not executed, skipping (year: {})".format(year))
                             continue
 
+                        full_image = np.rollaxis(full_image, 0, 3)
+
                         # superres_image_path = '/oak/stanford/groups/deho/building_compliance/los_angeles_naip/superres_0.0001/{}_{}.png'.format(
                         #     index, year)
                         # if not os.path.exists(superres_image_path):
@@ -413,11 +415,11 @@ class NAIPDataLoader(AbstractDataLoader):
                         #     dst.write(full_image_mask[:3, :, :])
                         ### END PRINT
 
-                        with open(f'{index}_full_{year}.p', 'wb') as w:
-                            pickle.dump(full_image, w)
-
-                        with open(f'{index}_mask_{year}.p', 'wb') as w:
-                            pickle.dump(mask_image, w)
+                        # with open(f'{index}_full_{year}.p', 'wb') as w:
+                        #     pickle.dump(full_image, w)
+                        #
+                        # with open(f'{index}_mask_{year}.p', 'wb') as w:
+                        #     pickle.dump(mask_image, w)
 
                         mask = np.zeros((mask_image.shape[0], mask_image.shape[1]), dtype=np.bool)
                         mask[np.sum(mask_image == 0, axis=2) == 4] = 1
