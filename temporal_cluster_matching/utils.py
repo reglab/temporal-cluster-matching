@@ -39,7 +39,26 @@ def get_all_geoms_from_file1(fn, index_done):
         for row in f:
             geom = row['geometry']
             index = row['properties']['index']
-            if str(index) not in index_done:
+            if str(index) not in index_done and int(index) in [755757646,
+751213445,
+751213844,
+754800814,
+756337995,
+755540372,
+758829136,
+751214138,
+751212294,
+758471257,
+753047817,
+753798393,
+760902376,
+756107545,
+44367358,
+753048757,
+753048141,
+755757647,
+753047663,
+867529989]:
                 geoms.append((index, geom))
     return geoms
 
